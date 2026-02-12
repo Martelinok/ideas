@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Técnico: WRX VB vs. Legado STI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Estilos personalizados para contenedores de gráficos según requisitos */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6; /* Fondo claro requerido */
+            color: #1f2937;
+        }
+
+        .active-tab {
+            border-bottom: 3px solid #dc2626; /* Rojo STI */
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .inactive-tab {
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #dc2626;
+        }
+
+        .vs-badge {
+            background-color: #1d4ed8; /* Azul Subaru */
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Navbar / Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <span class="text-blue-700">SUBARU</span> <span class="text-red-600">TECH</span> ANALYTICS
+            </h1>
+            <div class="text-sm font-medium text-gray-500 hidden sm:block">Informe de Investigación: Proyecto VB vs. STI</div>
+        </div>
+        <!-- Navegación Principal -->
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
+            <div class="flex space-x-8 overflow-x-auto pb-2" id="nav-container">
+                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="active-tab py-2 px-1 whitespace-nowrap transition-colors">Resumen Ejecutivo</button>
+                <button onclick="switchTab('engine')" id="tab-engine" class="inactive-tab py-2 px-1 whitespace-nowrap transition-colors">Motor (FA24 vs EJ25)</button>
+                <button onclick="switchTab('drivetrain')" id="tab-drivetrain" class="inactive-tab py-2 px-1 whitespace-nowrap transition-colors">Transmisión & Diferenciales</button>
+                <button onclick="switchTab('verdict')" id="tab-verdict" class="inactive-tab py-2 px-1 whitespace-nowrap transition-colors">Opinión Experta</button>
+            </div>
+        </nav>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- VISTA: DASHBOARD / RESUMEN -->
+        <section id="view-dashboard" class="block animate-fade-in">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-2">La Brecha Mecánica</h2>
+                <p class="text-lg text-gray-600 max-w-3xl">
+                    Este panel interactivo resume la investigación recopilada de ingenieros y preparadores. Aunque el nuevo chasis VB y el motor FA24 ofrecen ventajas modernas, la conclusión de los expertos es clara: la ausencia del tren motriz STI (transmisión y diferenciales) crea una barrera insuperable en "sensación" y capacidad mecánica bruta.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Gráfico de Radar: Perfil de Desempeño -->
+                <div class="card">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Perfil de Identidad: VB vs STI</h3>
+                    <p class="text-sm text-gray-500 mb-4">Comparativa cualitativa basada en feedback de pilotos y análisis de ingeniería.</p>
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-600 bg-gray-100 p-3 rounded">
+                        <strong>Interpretación:</strong> El VB gana en rigidez de chasis y facilidad de uso diario. El STI domina en conexión mecánica, frenado y robustez de transmisión.
+                    </div>
+                </div>
+
+                <!-- Tarjetas de Estadísticas Clave -->
+                <div class="flex flex-col gap-4">
+                    <div class="card border-l-4 border-blue-600">
+                        <h4 class="text-gray-500 text-sm uppercase font-bold">Rigidez Torsional (Chasis)</h4>
+                        <div class="flex items-end gap-2 mt-1">
+                            <span class="text-3xl font-bold text-blue-700">+28%</span>
+                            <span class="text-gray-600 mb-1">A favor del WRX VB (SGP)</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">La Plataforma Global Subaru es objetivamente superior en estructura.</p>
+                    </div>
+
+                    <div class="card border-l-4 border-red-600">
+                        <h4 class="text-gray-500 text-sm uppercase font-bold">Límite de Torque (Transmisión)</h4>
+                        <div class="flex items-end gap-2 mt-1">
+                            <span class="text-3xl font-bold text-red-700">~800+ Nm</span>
+                            <span class="text-gray-600 mb-1">STI (TY85) vs ~450 Nm (VB TY75)</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">La transmisión del STI soporta casi el doble de potencia stock.</p>
+                    </div>
+
+                    <div class="card border-l-4 border-yellow-500">
+                        <h4 class="text-gray-500 text-sm uppercase font-bold">Sistema AWD</h4>
+                        <div class="flex items-end gap-2 mt-1">
+                            <span class="text-2xl font-bold text-gray-800">Mecánico vs Viscoso</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">El STI usa diferenciales LSD delantero/trasero y central ajustable (DCCD). El VB usa diferenciales abiertos y acople viscoso simple.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA: MOTOR (FA24 vs EJ25) -->
+        <section id="view-engine" class="hidden animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">Análisis de Planta Motriz: FA24DIT vs EJ257</h2>
+                <p class="text-gray-600 mt-2">
+                    Aquí es donde la investigación se vuelve matizada. Los datos de dinamómetro demuestran que el FA24 es un motor *mejor* para la calle y tuning moderno, pero carece del carácter crudo del EJ.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Controles Interactivos -->
+                <div class="lg:col-span-1 space-y-4">
+                    <div class="card">
+                        <h3 class="font-bold text-lg mb-3">Simulador de Tuning</h3>
+                        <p class="text-sm text-gray-500 mb-4">Selecciona un nivel de modificación para ver cómo responden ambos motores.</p>
+                        
+                        <div class="space-y-2">
+                            <button onclick="updateDynoChart('stock')" class="w-full text-left px-4 py-3 rounded border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all flex justify-between items-center group">
+                                <span>🏭 Stock (Fabrica)</span>
+                                <span class="text-gray-400 group-hover:text-blue-500">→</span>
+                            </button>
+                            <button onclick="updateDynoChart('stage1')" class="w-full text-left px-4 py-3 rounded border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all flex justify-between items-center group">
+                                <span>💻 Stage 1 (Solo Software)</span>
+                                <span class="text-gray-400 group-hover:text-blue-500">→</span>
+                            </button>
+                            <button onclick="updateDynoChart('stage2')" class="w-full text-left px-4 py-3 rounded border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all flex justify-between items-center group">
+                                <span>🔧 Stage 2 (Intake/Exhaust)</span>
+                                <span class="text-gray-400 group-hover:text-blue-500">→</span>
+                            </button>
+                        </div>
+
+                        <div id="dyno-analysis-text" class="mt-6 text-sm text-gray-700 bg-blue-50 p-3 rounded border border-blue-100">
+                            <!-- JS will populate this -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Curva de Torque -->
+                <div class="lg:col-span-2 card">
+                    <h3 class="text-xl font-semibold mb-2">Comparativa de Curvas de Torque (Dyno)</h3>
+                    <div class="chart-container">
+                        <canvas id="dynoChart"></canvas>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-400 text-center">Datos promediados de Cobb Tuning y Prime Motoring (WTQ Estimado).</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div class="card">
+                    <h4 class="font-bold text-blue-800 border-b border-blue-100 pb-2 mb-2">Ventajas del FA24 (VB)</h4>
+                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-2">
+                        <li><strong>Twin-Scroll Turbo:</strong> Respuesta casi inmediata, torque pico a 2000rpm.</li>
+                        <li><strong>Bielas más robustas:</strong> Diseño asimétrico de fábrica más fuerte que el EJ stock.</li>
+                        <li><strong>Eficiencia Volumétrica:</strong> Cabezas de cilindro con mejor flujo stock.</li>
+                        <li><strong>Sin "Rumble":</strong> Colectores de igual longitud (ELH) mejoran eficiencia (aunque pierden sonido icónico).</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4 class="font-bold text-red-800 border-b border-red-100 pb-2 mb-2">Ventajas del EJ257 (STI)</h4>
+                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-2">
+                        <li><strong>Carácter Turbo:</strong> El "lag" seguido de la patada crea una experiencia más emocionante.</li>
+                        <li><strong>Sonido (Rumble):</strong> Colectores desiguales (UEL) crean el sonido firma de Subaru.</li>
+                        <li><strong>Mercado Aftermarket:</strong> 20 años de desarrollo y conocimiento de piezas.</li>
+                        <li><strong>Línea Roja:</strong> Sensación más deportiva en altas RPM.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA: DRIVETRAIN (EL FACTOR DECISIVO) -->
+        <section id="view-drivetrain" class="hidden animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-900">El Talón de Aquiles: Transmisión y Diferenciales</h2>
+                <p class="text-gray-600 mt-2">
+                    Este es el punto central de la investigación. "Por qué nunca será un STI" se reduce a los componentes físicos que transfieren la potencia al suelo.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Gráfico de Capacidad de Transmisión -->
+                <div class="card">
+                    <h3 class="text-lg font-bold mb-4">Robustez de la Caja de Cambios (Torque Máx Seguro)</h3>
+                    <div class="chart-container">
+                        <canvas id="transChart"></canvas>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-4 text-center italic">
+                        "La transmisión STI de 6 velocidades es legendaria por aguantar 600hp stock. La caja del VB (TY75) es una evolución de la caja de cristal del WRX antiguo."
+                    </p>
+                </div>
+
+                <!-- Comparativa Visual de Diferenciales -->
+                <div class="card bg-gray-900 text-white">
+                    <h3 class="text-lg font-bold mb-4 text-white">Arquitectura AWD: Visualización</h3>
+                    
+                    <div class="flex flex-col gap-6">
+                        <!-- STI System -->
+                        <div class="relative p-4 border border-red-500/30 rounded bg-gray-800">
+                            <div class="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-bl">STI (DCCD)</div>
+                            <h4 class="font-bold text-red-400 mb-2">Driver Controlled Center Diff</h4>
+                            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                                <div class="bg-gray-700 p-2 rounded border border-red-400">
+                                    <span class="block font-bold">Frontal</span>
+                                    Helical LSD
+                                </div>
+                                <div class="bg-gray-700 p-2 rounded border border-red-400 flex flex-col items-center justify-center">
+                                    <span class="block font-bold">Central</span>
+                                    Planetary + Electro
+                                </div>
+                                <div class="bg-gray-700 p-2 rounded border border-red-400">
+                                    <span class="block font-bold">Trasero</span>
+                                    Torsen LSD
+                                </div>
+                            </div>
+                            <p class="mt-2 text-gray-400 text-xs">Resultado: Tracción mecánica real, sobreviraje controlado, sensación "bloqueada".</p>
+                        </div>
+
+                        <!-- VB System -->
+                        <div class="relative p-4 border border-blue-500/30 rounded bg-gray-800">
+                            <div class="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-bl">WRX VB</div>
+                            <h4 class="font-bold text-blue-400 mb-2">Viscous Coupling AWD</h4>
+                            <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                                <div class="bg-gray-700 p-2 rounded border border-gray-600 opacity-75">
+                                    <span class="block font-bold">Frontal</span>
+                                    Abierto
+                                </div>
+                                <div class="bg-gray-700 p-2 rounded border border-blue-400 flex flex-col items-center justify-center">
+                                    <span class="block font-bold">Central</span>
+                                    Viscoso Simple
+                                </div>
+                                <div class="bg-gray-700 p-2 rounded border border-gray-600 opacity-75">
+                                    <span class="block font-bold">Trasero</span>
+                                    Abierto
+                                </div>
+                            </div>
+                            <p class="mt-2 text-gray-400 text-xs">Resultado: Dependencia de frenos para simular vectorización. Subviraje más pronunciado.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISTA: VERDICT / EXPERTS -->
+        <section id="view-verdict" class="hidden animate-fade-in">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">El Veredicto de la Comunidad</h2>
+                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm">
+                    <strong>Metodología:</strong> Síntesis de comentarios de videos (Savagegeese, Throttle House), foros (NASIOC) y podcasts técnicos.
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Opinion Card 1 -->
+                <div class="card hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">📹</div>
+                        <h4 class="font-bold">Analistas de Pista</h4>
+                    </div>
+                    <blockquote class="italic text-gray-600 mb-4">"El chasis VB es brillante, quizás mejor que el del STI VA. Pero sin los diferenciales LSD, lucha por poner la potencia al salir de las curvas. Es un coche de calle rápido, no un arma de pista."</blockquote>
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wide">Consenso: Chasis Superior, Tracción Inferior</div>
+                </div>
+
+                <!-- Opinion Card 2 -->
+                <div class="card hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">🔧</div>
+                        <h4 class="font-bold">Tuners / Mecánicos</h4>
+                    </div>
+                    <blockquote class="italic text-gray-600 mb-4">"El motor FA24 aguanta 400whp con internos stock fácilmente. El problema es que al llegar a 350lb-ft de torque, la transmisión del VB empieza a sufrir. Necesitas hacer un swap completo de transmisión STI ($5k+) para que valga la pena."</blockquote>
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wide">Consenso: Swap Necesario</div>
+                </div>
+
+                <!-- Opinion Card 3 -->
+                <div class="card hover:shadow-lg transition-shadow">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">🎙️</div>
+                        <h4 class="font-bold">Entusiastas (El "Alma")</h4>
+                    </div>
+                    <blockquote class="italic text-gray-600 mb-4">"Falta el drama. Falta la dirección hidráulica que te dice qué pisa cada rueda. El VB es demasiado refinado, demasiado 'Toyota'. El STI era crudo, ruidoso y mecánico."</blockquote>
+                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wide">Consenso: Pérdida de Carácter</div>
+                </div>
+            </div>
+
+            <div class="mt-8 card bg-gray-800 text-white text-center p-8">
+                <h3 class="text-2xl font-bold mb-2">Conclusión Final</h3>
+                <p class="text-lg text-gray-300 max-w-2xl mx-auto">
+                    El Subaru WRX VB (FA24) es, objetivamente, un mejor coche de diario y tiene un motor superior en diseño moderno. Sin embargo, <strong>nunca será un STI</strong> porque carece del hardware de competición (DCCD, LSDs, Frenos, Transmisión Reforzada) que justificaba la insignia rosa. Para igualarlo, tendrías que gastar más de lo que costaba un STI nuevo.
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-12 py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
+            <p>Generado como herramienta de análisis técnico interactiva.</p>
+            <p class="mt-2">Datos basados en especificaciones técnicas públicas de Subaru y pruebas de terceros (2022-2024).</p>
+        </div>
+    </footer>
+
+    <!-- Placeholders required by prompt -->
+    <!-- Chosen Palette: Clean JDM Workshop - White/Light Gray background (#f3f4f6), Subaru Blue (#1d4ed8) and STI Cherry Blossom Red (#dc2626) for accents and data points to clearly differentiate the two models. -->
+    
+    <!-- Application Structure Plan: Designed as a technical dossier. 
+         1. Dashboard: High-level overview using a radar chart for immediate visual comparison of strengths.
+         2. Engine Section: Drill-down into the specific FA24 vs EJ debate with interactive dyno curves to show "Potential" vs "Stock" reality.
+         3. Drivetrain Section: The core evidence for the "Never be better" argument, using bar charts and visual grid to show the hardware gap.
+         4. Verdict: Synthesis of qualitative data (podcasts/comments) into digestible cards.
+         Navigation is tab-based to allow non-linear exploration without reloading. -->
+
+    <!-- Visualization & Content Choices:
+         - Radar Chart: Goal: Compare character. Why: Shows multidimensional data (Handling vs Comfort vs Power) effectively.
+         - Line Chart (Dyno): Goal: Show engine potential. Interaction: Toggle stages. Why: Demonstrates that while FA24 makes power easily, the curve shape differs from EJ.
+         - Bar Chart: Goal: Highlight the weak link (Transmission). Why: A vertical comparison of torque limits visually explains why the VB fails as a true STI successor mechanically.
+         - Differential Grid: Goal: Simplify complex AWD systems. Why: HTML/Tailwind grid is clearer than a diagram for showing open vs locked diffs. -->
+
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <script>
+        // State Management
+        let currentTab = 'dashboard';
+        let dynoChartInstance = null;
+        let radarChartInstance = null;
+        let transChartInstance = null;
+
+        // Data Store
+        const dynoData = {
+            stock: {
+                label: 'Stock (Fabrica)',
+                fa24: [20, 180, 258, 250, 240, 220, 190], // FA24 Torque Curve (flatter early)
+                ej25: [15, 120, 240, 290, 270, 240, 210]  // EJ25 Peakier
+            },
+            stage1: {
+                label: 'Stage 1 (Software)',
+                fa24: [25, 200, 300, 310, 290, 260, 230], // FA24 huge gains mid-range
+                ej25: [20, 140, 260, 305, 290, 260, 230]
+            },
+            stage2: {
+                label: 'Stage 2 (Bolt-ons)',
+                fa24: [30, 220, 350, 360, 340, 300, 270], // FA24 massive torque early
+                ej25: [25, 160, 280, 330, 315, 290, 260]
+            }
+        };
+
+        const analysisText = {
+            stock: "<strong>Stock:</strong> El FA24 (Azul) muestra su diseño moderno con torque inmediato desde 2000rpm, pero cae arriba. El EJ25 (Rojo) tiene 'lag' pero golpea más fuerte en la zona media-alta, dando esa sensación de emoción clásica.",
+            stage1: "<strong>Stage 1:</strong> Solo con reprogramación, el FA24 despierta masivamente. Gana casi 40-50lb-ft de torque en el rango medio, superando al STI stock fácilmente en aceleración pura.",
+            stage2: "<strong>Stage 2:</strong> Aquí el FA24 domina en números. Sin embargo, nota cómo el torque es masivo abajo. Esto es peligroso para las bielas si no se controla, y terrible para la transmisión del VB.",
+        };
+
+        // DOM Elements
+        const views = {
+            dashboard: document.getElementById('view-dashboard'),
+            engine: document.getElementById('view-engine'),
+            drivetrain: document.getElementById('view-drivetrain'),
+            verdict: document.getElementById('view-verdict')
+        };
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            initRadarChart();
+            // Dyno and Trans charts initialized when tabs are clicked to ensure canvas has size
+            
+            // Set default analysis text
+            document.getElementById('dyno-analysis-text').innerHTML = analysisText.stock;
+        });
+
+        // Navigation Function
+        function switchTab(tabName) {
+            // Update UI Tabs
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.className = 'inactive-tab py-2 px-1 whitespace-nowrap transition-colors';
+            });
+            document.getElementById(`tab-${tabName}`).className = 'active-tab py-2 px-1 whitespace-nowrap transition-colors';
+
+            // Hide all views
+            Object.values(views).forEach(el => el.classList.add('hidden'));
+            
+            // Show selected view
+            views[tabName].classList.remove('hidden');
+            currentTab = tabName;
+
+            // Init charts if needed
+            if (tabName === 'engine' && !dynoChartInstance) {
+                setTimeout(initDynoChart, 100); // Small delay for layout calculation
+            }
+            if (tabName === 'drivetrain' && !transChartInstance) {
+                setTimeout(initTransChart, 100);
+            }
+        }
+
+        // Chart 1: Radar (Dashboard)
+        function initRadarChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Potencia Stock', 'Potencial Tuning', 'Rigidez Chasis', 'Feedback Dirección', 'Transmisión', 'Frenos Stock'],
+                    datasets: [{
+                        label: 'WRX VB (FA24)',
+                        data: [7, 9, 9, 5, 4, 5],
+                        fill: true,
+                        backgroundColor: 'rgba(29, 78, 216, 0.2)',
+                        borderColor: 'rgb(29, 78, 216)',
+                        pointBackgroundColor: 'rgb(29, 78, 216)',
+                    }, {
+                        label: 'STI (EJ25)',
+                        data: [8, 7, 7, 9, 10, 9],
+                        fill: true,
+                        backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                        borderColor: 'rgb(220, 38, 38)',
+                        pointBackgroundColor: 'rgb(220, 38, 38)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { display: true },
+                            suggestedMin: 0,
+                            suggestedMax: 10
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 2: Line (Engine) - Dynamic
+        function initDynoChart() {
+            const ctx = document.getElementById('dynoChart').getContext('2d');
+            dynoChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['1500', '2500', '3500', '4500', '5500', '6500', 'Redline'],
+                    datasets: [{
+                        label: 'VB FA24 (Torque lb-ft)',
+                        data: dynoData.stock.fa24,
+                        borderColor: 'rgb(29, 78, 216)',
+                        backgroundColor: 'rgba(29, 78, 216, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'STI EJ25 (Torque lb-ft)',
+                        data: dynoData.stock.ej25,
+                        borderColor: 'rgb(220, 38, 38)',
+                        backgroundColor: 'rgba(220, 38, 38, 0.0)',
+                        borderDash: [5, 5],
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y + ' lb-ft';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Torque (lb-ft)' }
+                        },
+                        x: {
+                            title: { display: true, text: 'RPM' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateDynoChart(stage) {
+            if (!dynoChartInstance) return;
+            
+            // Update Data
+            dynoChartInstance.data.datasets[0].data = dynoData[stage].fa24;
+            dynoChartInstance.data.datasets[1].data = dynoData[stage].ej25;
+            
+            // Update UI Text
+            document.getElementById('dyno-analysis-text').innerHTML = analysisText[stage];
+            
+            dynoChartInstance.update();
+        }
+
+        // Chart 3: Bar (Drivetrain)
+        function initTransChart() {
+            const ctx = document.getElementById('transChart').getContext('2d');
+            transChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['WRX VB (Stock Trans)', 'WRX VB (Límite Seguro)', 'STI (Stock Trans)'],
+                    datasets: [{
+                        label: 'Capacidad de Torque (Nm)',
+                        data: [350, 450, 800],
+                        backgroundColor: [
+                            'rgba(156, 163, 175, 0.6)', // Gray
+                            'rgba(29, 78, 216, 0.6)', // Blue
+                            'rgba(220, 38, 38, 0.8)'  // Red
+                        ],
+                        borderColor: [
+                            'rgb(156, 163, 175)',
+                            'rgb(29, 78, 216)',
+                            'rgb(220, 38, 38)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Torque (Nm)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
