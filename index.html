@@ -1,578 +1,707 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análisis Técnico: WRX VB vs. Legado STI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* Estilos personalizados para contenedores de gráficos según requisitos */
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 350px;
-            max-height: 400px;
-        }
-        
-        @media (max-width: 640px) {
-            .chart-container {
-                height: 300px;
-            }
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptoFolio — Tech Stack Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #06060a;
+    --bg-card: #0d0d14;
+    --bg-card-hover: #12121c;
+    --border: #1a1a2e;
+    --border-glow: #2d2d5a;
+    --text-primary: #e8e8f0;
+    --text-secondary: #8888a8;
+    --text-muted: #55556a;
+    --accent-blue: #4f7cff;
+    --accent-cyan: #22d3ee;
+    --accent-purple: #a855f7;
+    --accent-green: #34d399;
+    --accent-orange: #fb923c;
+    --accent-pink: #f472b6;
+    --accent-yellow: #facc15;
+    --gradient-hero: linear-gradient(135deg, #4f7cff 0%, #a855f7 50%, #f472b6 100%);
+    --gradient-blue: linear-gradient(135deg, #4f7cff, #22d3ee);
+    --gradient-purple: linear-gradient(135deg, #a855f7, #f472b6);
+    --gradient-green: linear-gradient(135deg, #34d399, #22d3ee);
+    --gradient-orange: linear-gradient(135deg, #fb923c, #facc15);
+  }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f3f4f6; /* Fondo claro requerido */
-            color: #1f2937;
-        }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        .active-tab {
-            border-bottom: 3px solid #dc2626; /* Rojo STI */
-            color: #dc2626;
-            font-weight: bold;
-        }
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
 
-        .inactive-tab {
-            color: #6b7280;
-            border-bottom: 3px solid transparent;
-        }
+  /* Ambient background */
+  .ambient {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .ambient .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.15;
+    animation: float 20s ease-in-out infinite;
+  }
+  .ambient .orb:nth-child(1) {
+    width: 600px; height: 600px;
+    background: var(--accent-blue);
+    top: -10%; left: -5%;
+    animation-delay: 0s;
+  }
+  .ambient .orb:nth-child(2) {
+    width: 500px; height: 500px;
+    background: var(--accent-purple);
+    top: 40%; right: -10%;
+    animation-delay: -7s;
+  }
+  .ambient .orb:nth-child(3) {
+    width: 400px; height: 400px;
+    background: var(--accent-cyan);
+    bottom: -5%; left: 30%;
+    animation-delay: -14s;
+  }
 
-        .card {
-            background-color: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .metric-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #dc2626;
-        }
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -40px) scale(1.05); }
+    66% { transform: translate(-20px, 20px) scale(0.95); }
+  }
 
-        .vs-badge {
-            background-color: #1d4ed8; /* Azul Subaru */
-            color: white;
-            padding: 0.2rem 0.5rem;
-            border-radius: 0.25rem;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-    </style>
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 80px;
+    animation: fadeUp 0.8s ease-out;
+  }
+  .header .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: rgba(79, 124, 255, 0.08);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-blue);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+  .badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .header h1 {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+  .header h1 .gradient-text {
+    background: var(--gradient-hero);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header p {
+    font-size: 18px;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  /* FLOW SECTION */
+  .flow-section {
+    margin-bottom: 64px;
+    animation: fadeUp 0.8s ease-out both;
+  }
+  .flow-section:nth-child(2) { animation-delay: 0.1s; }
+  .flow-section:nth-child(3) { animation-delay: 0.2s; }
+  .flow-section:nth-child(4) { animation-delay: 0.3s; }
+  .flow-section:nth-child(5) { animation-delay: 0.4s; }
+  .flow-section:nth-child(6) { animation-delay: 0.5s; }
+  .flow-section:nth-child(7) { animation-delay: 0.6s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .section-label .num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    letter-spacing: 1px;
+  }
+  .section-label h2 {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-secondary);
+  }
+
+  /* CARDS GRID */
+  .cards-row {
+    display: grid;
+    gap: 16px;
+  }
+  .cards-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .cards-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .cards-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .cards-row.cols-1 { grid-template-columns: 1fr; }
+
+  @media (max-width: 768px) {
+    .cards-row.cols-3, .cards-row.cols-4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .cards-row.cols-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 500px) {
+    .cards-row.cols-3, .cards-row.cols-4 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .card {
+    position: relative;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+  .card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-glow);
+    transform: translateY(-4px);
+  }
+  .card:hover::before { opacity: 1; }
+
+  .card.accent-blue::before { background: var(--gradient-blue); }
+  .card.accent-purple::before { background: var(--gradient-purple); }
+  .card.accent-green::before { background: var(--gradient-green); }
+  .card.accent-orange::before { background: var(--gradient-orange); }
+
+  .card .icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .card.accent-blue .icon { background: rgba(79, 124, 255, 0.12); color: var(--accent-blue); }
+  .card.accent-purple .icon { background: rgba(168, 85, 247, 0.12); color: var(--accent-purple); }
+  .card.accent-green .icon { background: rgba(52, 211, 153, 0.12); color: var(--accent-green); }
+  .card.accent-orange .icon { background: rgba(251, 146, 60, 0.12); color: var(--accent-orange); }
+
+  .card h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+  .card .subtitle {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  .card p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    font-weight: 300;
+  }
+  .card .tech-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 14px;
+  }
+  .tech-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    letter-spacing: 0.3px;
+  }
+
+  /* FLOW CONNECTOR */
+  .flow-connector {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+  }
+  .flow-connector .arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-muted);
+  }
+  .flow-connector .line {
+    width: 2px;
+    height: 32px;
+    background: linear-gradient(to bottom, var(--border), var(--border-glow), var(--border));
+    border-radius: 2px;
+  }
+  .flow-connector .chevron {
+    font-size: 14px;
+    animation: bounceDown 2s ease-in-out infinite;
+  }
+  @keyframes bounceDown {
+    0%, 100% { transform: translateY(0); opacity: 0.4; }
+    50% { transform: translateY(4px); opacity: 1; }
+  }
+
+  .flow-connector .label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* BIG CARD */
+  .card-wide {
+    padding: 36px 32px;
+  }
+  .card-wide .inner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+  }
+  .inner-item {
+    padding: 16px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+  }
+  .inner-item h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .inner-item p {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding-top: 60px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  .footer p {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+  .footer .mono {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Feature list in wide card */
+  .feature-list {
+    list-style: none;
+    margin-top: 12px;
+  }
+  .feature-list li {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 300;
+  }
+  .feature-list li:last-child { border: none; }
+  .feature-list .check {
+    color: var(--accent-green);
+    font-size: 14px;
+  }
+</style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body>
 
-    <!-- Navbar / Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                <span class="text-blue-700">SUBARU</span> <span class="text-red-600">TECH</span> ANALYTICS
-            </h1>
-            <div class="text-sm font-medium text-gray-500 hidden sm:block">Informe de Investigación: Proyecto VB vs. STI</div>
+<div class="ambient">
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+</div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="badge"><span class="dot"></span> Architecture Overview</div>
+    <h1><span class="gradient-text">CryptoFolio</span><br>Tech Stack</h1>
+    <p>Arquitectura completa para una app multi-chain de tracking de portafolio crypto — Web, Android & iOS desde un solo codebase.</p>
+  </header>
+
+  <!-- 01 MONOREPO -->
+  <div class="flow-section">
+    <div class="section-label">
+      <span class="num">01</span>
+      <h2>Monorepo Structure</h2>
+    </div>
+    <div class="cards-row cols-1">
+      <div class="card accent-blue card-wide">
+        <div class="icon">📦</div>
+        <h3>Turborepo + pnpm</h3>
+        <div class="subtitle">Monorepo Tooling</div>
+        <p>Un solo repositorio con builds incrementales, caching inteligente y workspaces compartidos. TypeScript end-to-end.</p>
+        <div class="inner-grid">
+          <div class="inner-item">
+            <h4>apps/mobile</h4>
+            <p>Expo — iOS, Android, Web</p>
+          </div>
+          <div class="inner-item">
+            <h4>apps/api</h4>
+            <p>Fastify o NestJS — Backend</p>
+          </div>
+          <div class="inner-item">
+            <h4>packages/shared</h4>
+            <p>Tipos, validaciones, constantes</p>
+          </div>
+          <div class="inner-item">
+            <h4>packages/crypto-utils</h4>
+            <p>Parseo de wallets, cálculos</p>
+          </div>
         </div>
-        <!-- Navegación Principal -->
-        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-2">
-            <div class="flex space-x-8 overflow-x-auto pb-2" id="nav-container">
-                <button onclick="switchTab('dashboard')" id="tab-dashboard" class="active-tab py-2 px-1 whitespace-nowrap transition-colors">Resumen Ejecutivo</button>
-                <button onclick="switchTab('engine')" id="tab-engine" class="inactive-tab py-2 px-1 whitespace-nowrap transition-colors">Motor (FA24 vs EJ25)</button>
-                <button onclick="switchTab('drivetrain')" id="tab-drivetrain" class="inactive-tab py-2 px-1 whitespace-nowrap transition-colors">Transmisión & Diferenciales</button>
-                <button onclick="switchTab('verdict')" id="tab-verdict" class="inactive-tab py-2 px-1 whitespace-nowrap transition-colors">Opinión Experta</button>
-            </div>
-        </nav>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        <!-- VISTA: DASHBOARD / RESUMEN -->
-        <section id="view-dashboard" class="block animate-fade-in">
-            <div class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 mb-2">La Brecha Mecánica</h2>
-                <p class="text-lg text-gray-600 max-w-3xl">
-                    Este panel interactivo resume la investigación recopilada de ingenieros y preparadores. Aunque el nuevo chasis VB y el motor FA24 ofrecen ventajas modernas, la conclusión de los expertos es clara: la ausencia del tren motriz STI (transmisión y diferenciales) crea una barrera insuperable en "sensación" y capacidad mecánica bruta.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <!-- Gráfico de Radar: Perfil de Desempeño -->
-                <div class="card">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Perfil de Identidad: VB vs STI</h3>
-                    <p class="text-sm text-gray-500 mb-4">Comparativa cualitativa basada en feedback de pilotos y análisis de ingeniería.</p>
-                    <div class="chart-container">
-                        <canvas id="radarChart"></canvas>
-                    </div>
-                    <div class="mt-4 text-sm text-gray-600 bg-gray-100 p-3 rounded">
-                        <strong>Interpretación:</strong> El VB gana en rigidez de chasis y facilidad de uso diario. El STI domina en conexión mecánica, frenado y robustez de transmisión.
-                    </div>
-                </div>
-
-                <!-- Tarjetas de Estadísticas Clave -->
-                <div class="flex flex-col gap-4">
-                    <div class="card border-l-4 border-blue-600">
-                        <h4 class="text-gray-500 text-sm uppercase font-bold">Rigidez Torsional (Chasis)</h4>
-                        <div class="flex items-end gap-2 mt-1">
-                            <span class="text-3xl font-bold text-blue-700">+28%</span>
-                            <span class="text-gray-600 mb-1">A favor del WRX VB (SGP)</span>
-                        </div>
-                        <p class="text-sm text-gray-500 mt-2">La Plataforma Global Subaru es objetivamente superior en estructura.</p>
-                    </div>
-
-                    <div class="card border-l-4 border-red-600">
-                        <h4 class="text-gray-500 text-sm uppercase font-bold">Límite de Torque (Transmisión)</h4>
-                        <div class="flex items-end gap-2 mt-1">
-                            <span class="text-3xl font-bold text-red-700">~800+ Nm</span>
-                            <span class="text-gray-600 mb-1">STI (TY85) vs ~450 Nm (VB TY75)</span>
-                        </div>
-                        <p class="text-sm text-gray-500 mt-2">La transmisión del STI soporta casi el doble de potencia stock.</p>
-                    </div>
-
-                    <div class="card border-l-4 border-yellow-500">
-                        <h4 class="text-gray-500 text-sm uppercase font-bold">Sistema AWD</h4>
-                        <div class="flex items-end gap-2 mt-1">
-                            <span class="text-2xl font-bold text-gray-800">Mecánico vs Viscoso</span>
-                        </div>
-                        <p class="text-sm text-gray-500 mt-2">El STI usa diferenciales LSD delantero/trasero y central ajustable (DCCD). El VB usa diferenciales abiertos y acople viscoso simple.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- VISTA: MOTOR (FA24 vs EJ25) -->
-        <section id="view-engine" class="hidden animate-fade-in">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">Análisis de Planta Motriz: FA24DIT vs EJ257</h2>
-                <p class="text-gray-600 mt-2">
-                    Aquí es donde la investigación se vuelve matizada. Los datos de dinamómetro demuestran que el FA24 es un motor *mejor* para la calle y tuning moderno, pero carece del carácter crudo del EJ.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Controles Interactivos -->
-                <div class="lg:col-span-1 space-y-4">
-                    <div class="card">
-                        <h3 class="font-bold text-lg mb-3">Simulador de Tuning</h3>
-                        <p class="text-sm text-gray-500 mb-4">Selecciona un nivel de modificación para ver cómo responden ambos motores.</p>
-                        
-                        <div class="space-y-2">
-                            <button onclick="updateDynoChart('stock')" class="w-full text-left px-4 py-3 rounded border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all flex justify-between items-center group">
-                                <span>🏭 Stock (Fabrica)</span>
-                                <span class="text-gray-400 group-hover:text-blue-500">→</span>
-                            </button>
-                            <button onclick="updateDynoChart('stage1')" class="w-full text-left px-4 py-3 rounded border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all flex justify-between items-center group">
-                                <span>💻 Stage 1 (Solo Software)</span>
-                                <span class="text-gray-400 group-hover:text-blue-500">→</span>
-                            </button>
-                            <button onclick="updateDynoChart('stage2')" class="w-full text-left px-4 py-3 rounded border border-gray-200 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all flex justify-between items-center group">
-                                <span>🔧 Stage 2 (Intake/Exhaust)</span>
-                                <span class="text-gray-400 group-hover:text-blue-500">→</span>
-                            </button>
-                        </div>
-
-                        <div id="dyno-analysis-text" class="mt-6 text-sm text-gray-700 bg-blue-50 p-3 rounded border border-blue-100">
-                            <!-- JS will populate this -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Gráfico de Curva de Torque -->
-                <div class="lg:col-span-2 card">
-                    <h3 class="text-xl font-semibold mb-2">Comparativa de Curvas de Torque (Dyno)</h3>
-                    <div class="chart-container">
-                        <canvas id="dynoChart"></canvas>
-                    </div>
-                    <div class="mt-2 text-xs text-gray-400 text-center">Datos promediados de Cobb Tuning y Prime Motoring (WTQ Estimado).</div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div class="card">
-                    <h4 class="font-bold text-blue-800 border-b border-blue-100 pb-2 mb-2">Ventajas del FA24 (VB)</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-2">
-                        <li><strong>Twin-Scroll Turbo:</strong> Respuesta casi inmediata, torque pico a 2000rpm.</li>
-                        <li><strong>Bielas más robustas:</strong> Diseño asimétrico de fábrica más fuerte que el EJ stock.</li>
-                        <li><strong>Eficiencia Volumétrica:</strong> Cabezas de cilindro con mejor flujo stock.</li>
-                        <li><strong>Sin "Rumble":</strong> Colectores de igual longitud (ELH) mejoran eficiencia (aunque pierden sonido icónico).</li>
-                    </ul>
-                </div>
-                <div class="card">
-                    <h4 class="font-bold text-red-800 border-b border-red-100 pb-2 mb-2">Ventajas del EJ257 (STI)</h4>
-                    <ul class="list-disc list-inside text-sm text-gray-700 space-y-2">
-                        <li><strong>Carácter Turbo:</strong> El "lag" seguido de la patada crea una experiencia más emocionante.</li>
-                        <li><strong>Sonido (Rumble):</strong> Colectores desiguales (UEL) crean el sonido firma de Subaru.</li>
-                        <li><strong>Mercado Aftermarket:</strong> 20 años de desarrollo y conocimiento de piezas.</li>
-                        <li><strong>Línea Roja:</strong> Sensación más deportiva en altas RPM.</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- VISTA: DRIVETRAIN (EL FACTOR DECISIVO) -->
-        <section id="view-drivetrain" class="hidden animate-fade-in">
-            <div class="mb-6">
-                <h2 class="text-2xl font-bold text-gray-900">El Talón de Aquiles: Transmisión y Diferenciales</h2>
-                <p class="text-gray-600 mt-2">
-                    Este es el punto central de la investigación. "Por qué nunca será un STI" se reduce a los componentes físicos que transfieren la potencia al suelo.
-                </p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Gráfico de Capacidad de Transmisión -->
-                <div class="card">
-                    <h3 class="text-lg font-bold mb-4">Robustez de la Caja de Cambios (Torque Máx Seguro)</h3>
-                    <div class="chart-container">
-                        <canvas id="transChart"></canvas>
-                    </div>
-                    <p class="text-sm text-gray-500 mt-4 text-center italic">
-                        "La transmisión STI de 6 velocidades es legendaria por aguantar 600hp stock. La caja del VB (TY75) es una evolución de la caja de cristal del WRX antiguo."
-                    </p>
-                </div>
-
-                <!-- Comparativa Visual de Diferenciales -->
-                <div class="card bg-gray-900 text-white">
-                    <h3 class="text-lg font-bold mb-4 text-white">Arquitectura AWD: Visualización</h3>
-                    
-                    <div class="flex flex-col gap-6">
-                        <!-- STI System -->
-                        <div class="relative p-4 border border-red-500/30 rounded bg-gray-800">
-                            <div class="absolute top-0 right-0 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-bl">STI (DCCD)</div>
-                            <h4 class="font-bold text-red-400 mb-2">Driver Controlled Center Diff</h4>
-                            <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                                <div class="bg-gray-700 p-2 rounded border border-red-400">
-                                    <span class="block font-bold">Frontal</span>
-                                    Helical LSD
-                                </div>
-                                <div class="bg-gray-700 p-2 rounded border border-red-400 flex flex-col items-center justify-center">
-                                    <span class="block font-bold">Central</span>
-                                    Planetary + Electro
-                                </div>
-                                <div class="bg-gray-700 p-2 rounded border border-red-400">
-                                    <span class="block font-bold">Trasero</span>
-                                    Torsen LSD
-                                </div>
-                            </div>
-                            <p class="mt-2 text-gray-400 text-xs">Resultado: Tracción mecánica real, sobreviraje controlado, sensación "bloqueada".</p>
-                        </div>
-
-                        <!-- VB System -->
-                        <div class="relative p-4 border border-blue-500/30 rounded bg-gray-800">
-                            <div class="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-bl">WRX VB</div>
-                            <h4 class="font-bold text-blue-400 mb-2">Viscous Coupling AWD</h4>
-                            <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                                <div class="bg-gray-700 p-2 rounded border border-gray-600 opacity-75">
-                                    <span class="block font-bold">Frontal</span>
-                                    Abierto
-                                </div>
-                                <div class="bg-gray-700 p-2 rounded border border-blue-400 flex flex-col items-center justify-center">
-                                    <span class="block font-bold">Central</span>
-                                    Viscoso Simple
-                                </div>
-                                <div class="bg-gray-700 p-2 rounded border border-gray-600 opacity-75">
-                                    <span class="block font-bold">Trasero</span>
-                                    Abierto
-                                </div>
-                            </div>
-                            <p class="mt-2 text-gray-400 text-xs">Resultado: Dependencia de frenos para simular vectorización. Subviraje más pronunciado.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- VISTA: VERDICT / EXPERTS -->
-        <section id="view-verdict" class="hidden animate-fade-in">
-            <div class="mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">El Veredicto de la Comunidad</h2>
-                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm">
-                    <strong>Metodología:</strong> Síntesis de comentarios de videos (Savagegeese, Throttle House), foros (NASIOC) y podcasts técnicos.
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Opinion Card 1 -->
-                <div class="card hover:shadow-lg transition-shadow">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">📹</div>
-                        <h4 class="font-bold">Analistas de Pista</h4>
-                    </div>
-                    <blockquote class="italic text-gray-600 mb-4">"El chasis VB es brillante, quizás mejor que el del STI VA. Pero sin los diferenciales LSD, lucha por poner la potencia al salir de las curvas. Es un coche de calle rápido, no un arma de pista."</blockquote>
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wide">Consenso: Chasis Superior, Tracción Inferior</div>
-                </div>
-
-                <!-- Opinion Card 2 -->
-                <div class="card hover:shadow-lg transition-shadow">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">🔧</div>
-                        <h4 class="font-bold">Tuners / Mecánicos</h4>
-                    </div>
-                    <blockquote class="italic text-gray-600 mb-4">"El motor FA24 aguanta 400whp con internos stock fácilmente. El problema es que al llegar a 350lb-ft de torque, la transmisión del VB empieza a sufrir. Necesitas hacer un swap completo de transmisión STI ($5k+) para que valga la pena."</blockquote>
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wide">Consenso: Swap Necesario</div>
-                </div>
-
-                <!-- Opinion Card 3 -->
-                <div class="card hover:shadow-lg transition-shadow">
-                    <div class="flex items-center gap-3 mb-3">
-                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">🎙️</div>
-                        <h4 class="font-bold">Entusiastas (El "Alma")</h4>
-                    </div>
-                    <blockquote class="italic text-gray-600 mb-4">"Falta el drama. Falta la dirección hidráulica que te dice qué pisa cada rueda. El VB es demasiado refinado, demasiado 'Toyota'. El STI era crudo, ruidoso y mecánico."</blockquote>
-                    <div class="text-xs font-bold text-gray-400 uppercase tracking-wide">Consenso: Pérdida de Carácter</div>
-                </div>
-            </div>
-
-            <div class="mt-8 card bg-gray-800 text-white text-center p-8">
-                <h3 class="text-2xl font-bold mb-2">Conclusión Final</h3>
-                <p class="text-lg text-gray-300 max-w-2xl mx-auto">
-                    El Subaru WRX VB (FA24) es, objetivamente, un mejor coche de diario y tiene un motor superior en diseño moderno. Sin embargo, <strong>nunca será un STI</strong> porque carece del hardware de competición (DCCD, LSDs, Frenos, Transmisión Reforzada) que justificaba la insignia rosa. Para igualarlo, tendrías que gastar más de lo que costaba un STI nuevo.
-                </p>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-12 py-8">
-        <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-500">
-            <p>Generado como herramienta de análisis técnico interactiva.</p>
-            <p class="mt-2">Datos basados en especificaciones técnicas públicas de Subaru y pruebas de terceros (2022-2024).</p>
+        <div class="tech-tags">
+          <span class="tech-tag">TypeScript</span>
+          <span class="tech-tag">Turborepo</span>
+          <span class="tech-tag">pnpm workspaces</span>
+          <span class="tech-tag">Shared Types</span>
         </div>
-    </footer>
+      </div>
+    </div>
+  </div>
 
-    <!-- Placeholders required by prompt -->
-    <!-- Chosen Palette: Clean JDM Workshop - White/Light Gray background (#f3f4f6), Subaru Blue (#1d4ed8) and STI Cherry Blossom Red (#dc2626) for accents and data points to clearly differentiate the two models. -->
-    
-    <!-- Application Structure Plan: Designed as a technical dossier. 
-         1. Dashboard: High-level overview using a radar chart for immediate visual comparison of strengths.
-         2. Engine Section: Drill-down into the specific FA24 vs EJ debate with interactive dyno curves to show "Potential" vs "Stock" reality.
-         3. Drivetrain Section: The core evidence for the "Never be better" argument, using bar charts and visual grid to show the hardware gap.
-         4. Verdict: Synthesis of qualitative data (podcasts/comments) into digestible cards.
-         Navigation is tab-based to allow non-linear exploration without reloading. -->
+  <!-- CONNECTOR -->
+  <div class="flow-connector">
+    <div class="arrow">
+      <div class="line"></div>
+      <span class="chevron">▼</span>
+      <span class="label">imports &amp; builds</span>
+    </div>
+  </div>
 
-    <!-- Visualization & Content Choices:
-         - Radar Chart: Goal: Compare character. Why: Shows multidimensional data (Handling vs Comfort vs Power) effectively.
-         - Line Chart (Dyno): Goal: Show engine potential. Interaction: Toggle stages. Why: Demonstrates that while FA24 makes power easily, the curve shape differs from EJ.
-         - Bar Chart: Goal: Highlight the weak link (Transmission). Why: A vertical comparison of torque limits visually explains why the VB fails as a true STI successor mechanically.
-         - Differential Grid: Goal: Simplify complex AWD systems. Why: HTML/Tailwind grid is clearer than a diagram for showing open vs locked diffs. -->
+  <!-- 02 FRONTEND -->
+  <div class="flow-section">
+    <div class="section-label">
+      <span class="num">02</span>
+      <h2>Frontend — Cross Platform</h2>
+    </div>
+    <div class="cards-row cols-3">
+      <div class="card accent-purple">
+        <div class="icon">📱</div>
+        <h3>Expo (React Native)</h3>
+        <div class="subtitle">UI Framework</div>
+        <p>Un solo codebase para iOS, Android y Web. File-based routing con Expo Router.</p>
+        <div class="tech-tags">
+          <span class="tech-tag">React Native</span>
+          <span class="tech-tag">Expo SDK</span>
+          <span class="tech-tag">Expo Router</span>
+        </div>
+      </div>
+      <div class="card accent-purple">
+        <div class="icon">🔄</div>
+        <h3>State & Data</h3>
+        <div class="subtitle">Client State</div>
+        <p>Zustand para estado global del portafolio. TanStack Query para server state y caching.</p>
+        <div class="tech-tags">
+          <span class="tech-tag">Zustand</span>
+          <span class="tech-tag">TanStack Query</span>
+          <span class="tech-tag">React Context</span>
+        </div>
+      </div>
+      <div class="card accent-purple">
+        <div class="icon">⚡</div>
+        <h3>OTA Updates</h3>
+        <div class="subtitle">Auto Updates</div>
+        <p>Expo Updates para hot-fixes instantáneos sin pasar por App Store o Play Store.</p>
+        <div class="tech-tags">
+          <span class="tech-tag">EAS Update</span>
+          <span class="tech-tag">OTA Deploy</span>
+          <span class="tech-tag">EAS Build</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+  <!-- CONNECTOR -->
+  <div class="flow-connector">
+    <div class="arrow">
+      <div class="line"></div>
+      <span class="chevron">▼</span>
+      <span class="label">REST / WebSocket</span>
+    </div>
+  </div>
 
-    <script>
-        // State Management
-        let currentTab = 'dashboard';
-        let dynoChartInstance = null;
-        let radarChartInstance = null;
-        let transChartInstance = null;
+  <!-- 03 BACKEND -->
+  <div class="flow-section">
+    <div class="section-label">
+      <span class="num">03</span>
+      <h2>Backend — API Layer</h2>
+    </div>
+    <div class="cards-row cols-3">
+      <div class="card accent-green">
+        <div class="icon">🚀</div>
+        <h3>Fastify</h3>
+        <div class="subtitle">API Server</div>
+        <p>Servidor HTTP de alto rendimiento. Schema-based validation. Plugins para auth, CORS, rate limiting.</p>
+        <div class="tech-tags">
+          <span class="tech-tag">Node.js</span>
+          <span class="tech-tag">Fastify</span>
+          <span class="tech-tag">JWT Auth</span>
+        </div>
+      </div>
+      <div class="card accent-green">
+        <div class="icon">🗄️</div>
+        <h3>PostgreSQL + Redis</h3>
+        <div class="subtitle">Data Layer</div>
+        <p>Postgres como source of truth. Redis para cachear precios en tiempo real y datos de sesión.</p>
+        <div class="tech-tags">
+          <span class="tech-tag">PostgreSQL</span>
+          <span class="tech-tag">Redis</span>
+          <span class="tech-tag">Drizzle ORM</span>
+        </div>
+      </div>
+      <div class="card accent-green">
+        <div class="icon">☁️</div>
+        <h3>Render</h3>
+        <div class="subtitle">Cloud Deploy</div>
+        <p>Web Service para el API. Managed Postgres y Redis. Auto-deploy desde GitHub con zero-downtime.</p>
+        <div class="tech-tags">
+          <span class="tech-tag">Render</span>
+          <span class="tech-tag">Docker</span>
+          <span class="tech-tag">CI/CD</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        // Data Store
-        const dynoData = {
-            stock: {
-                label: 'Stock (Fabrica)',
-                fa24: [20, 180, 258, 250, 240, 220, 190], // FA24 Torque Curve (flatter early)
-                ej25: [15, 120, 240, 290, 270, 240, 210]  // EJ25 Peakier
-            },
-            stage1: {
-                label: 'Stage 1 (Software)',
-                fa24: [25, 200, 300, 310, 290, 260, 230], // FA24 huge gains mid-range
-                ej25: [20, 140, 260, 305, 290, 260, 230]
-            },
-            stage2: {
-                label: 'Stage 2 (Bolt-ons)',
-                fa24: [30, 220, 350, 360, 340, 300, 270], // FA24 massive torque early
-                ej25: [25, 160, 280, 330, 315, 290, 260]
-            }
-        };
+  <!-- CONNECTOR -->
+  <div class="flow-connector">
+    <div class="arrow">
+      <div class="line"></div>
+      <span class="chevron">▼</span>
+      <span class="label">Fetch Balances</span>
+    </div>
+  </div>
 
-        const analysisText = {
-            stock: "<strong>Stock:</strong> El FA24 (Azul) muestra su diseño moderno con torque inmediato desde 2000rpm, pero cae arriba. El EJ25 (Rojo) tiene 'lag' pero golpea más fuerte en la zona media-alta, dando esa sensación de emoción clásica.",
-            stage1: "<strong>Stage 1:</strong> Solo con reprogramación, el FA24 despierta masivamente. Gana casi 40-50lb-ft de torque en el rango medio, superando al STI stock fácilmente en aceleración pura.",
-            stage2: "<strong>Stage 2:</strong> Aquí el FA24 domina en números. Sin embargo, nota cómo el torque es masivo abajo. Esto es peligroso para las bielas si no se controla, y terrible para la transmisión del VB.",
-        };
+  <!-- 04 BLOCKCHAIN -->
+  <div class="flow-section">
+    <div class="section-label">
+      <span class="num">04</span>
+      <h2>Blockchain Data — Multi-Chain</h2>
+    </div>
+    <div class="cards-row cols-4">
+      <div class="card accent-orange">
+        <div class="icon">🔷</div>
+        <h3>EVM Chains</h3>
+        <div class="subtitle">Alchemy / Moralis</div>
+        <p>Ethereum, Polygon, Arbitrum, Base, BSC, Optimism.</p>
+        <div class="tech-tags">
+          <span class="tech-tag">Alchemy</span>
+          <span class="tech-tag">Moralis</span>
+        </div>
+      </div>
+      <div class="card accent-orange">
+        <div class="icon">☀️</div>
+        <h3>Solana</h3>
+        <div class="subtitle">Helius / RPC</div>
+        <p>SPL tokens, NFTs, staking positions y DeFi.</p>
+        <div class="tech-tags">
+          <span class="tech-tag">Helius</span>
+          <span class="tech-tag">Solana RPC</span>
+        </div>
+      </div>
+      <div class="card accent-orange">
+        <div class="icon">₿</div>
+        <h3>Bitcoin</h3>
+        <div class="subtitle">Mempool / Blockstream</div>
+        <p>Balance UTXO, transacciones, Lightning Network.</p>
+        <div class="tech-tags">
+          <span class="tech-tag">Blockstream</span>
+          <span class="tech-tag">Mempool.space</span>
+        </div>
+      </div>
+      <div class="card accent-orange">
+        <div class="icon">💰</div>
+        <h3>Precios</h3>
+        <div class="subtitle">Market Data</div>
+        <p>Precios en tiempo real, históricos y market cap consolidado.</p>
+        <div class="tech-tags">
+          <span class="tech-tag">CoinGecko</span>
+          <span class="tech-tag">CMC</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        // DOM Elements
-        const views = {
-            dashboard: document.getElementById('view-dashboard'),
-            engine: document.getElementById('view-engine'),
-            drivetrain: document.getElementById('view-drivetrain'),
-            verdict: document.getElementById('view-verdict')
-        };
+  <!-- CONNECTOR -->
+  <div class="flow-connector">
+    <div class="arrow">
+      <div class="line"></div>
+      <span class="chevron">▼</span>
+      <span class="label">Read-Only</span>
+    </div>
+  </div>
 
-        // Initialization
-        document.addEventListener('DOMContentLoaded', () => {
-            initRadarChart();
-            // Dyno and Trans charts initialized when tabs are clicked to ensure canvas has size
-            
-            // Set default analysis text
-            document.getElementById('dyno-analysis-text').innerHTML = analysisText.stock;
-        });
+  <!-- 05 WALLET CONNECTION -->
+  <div class="flow-section">
+    <div class="section-label">
+      <span class="num">05</span>
+      <h2>Wallet Connection</h2>
+    </div>
+    <div class="cards-row cols-2">
+      <div class="card accent-blue">
+        <div class="icon">👁️</div>
+        <h3>Read-Only Mode</h3>
+        <div class="subtitle">Recomendado</div>
+        <p>El usuario pega su dirección pública y el backend lee los balances on-chain. Sin acceso a fondos. Seguro y simple.</p>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> Sin riesgo de seguridad</li>
+          <li><span class="check">✓</span> Onboarding instantáneo</li>
+          <li><span class="check">✓</span> Soporta cualquier cadena</li>
+          <li><span class="check">✓</span> No requiere extensiones</li>
+        </ul>
+      </div>
+      <div class="card accent-blue">
+        <div class="icon">🔗</div>
+        <h3>WalletConnect</h3>
+        <div class="subtitle">Opcional</div>
+        <p>Conexión directa con MetaMask, Phantom, Rabby, etc. Para features futuras como DeFi tracking avanzado.</p>
+        <ul class="feature-list">
+          <li><span class="check">✓</span> Auto-detección de wallets</li>
+          <li><span class="check">✓</span> Verificación de ownership</li>
+          <li><span class="check">✓</span> Permisos y DeFi positions</li>
+          <li><span class="check">✓</span> Multi-chain connect</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
-        // Navigation Function
-        function switchTab(tabName) {
-            // Update UI Tabs
-            document.querySelectorAll('nav button').forEach(btn => {
-                btn.className = 'inactive-tab py-2 px-1 whitespace-nowrap transition-colors';
-            });
-            document.getElementById(`tab-${tabName}`).className = 'active-tab py-2 px-1 whitespace-nowrap transition-colors';
+  <!-- CONNECTOR -->
+  <div class="flow-connector">
+    <div class="arrow">
+      <div class="line"></div>
+      <span class="chevron">▼</span>
+      <span class="label">Unified Portfolio</span>
+    </div>
+  </div>
 
-            // Hide all views
-            Object.values(views).forEach(el => el.classList.add('hidden'));
-            
-            // Show selected view
-            views[tabName].classList.remove('hidden');
-            currentTab = tabName;
+  <!-- 06 USER EXPERIENCE -->
+  <div class="flow-section">
+    <div class="section-label">
+      <span class="num">06</span>
+      <h2>User Experience — Lo que ve el usuario</h2>
+    </div>
+    <div class="cards-row cols-1">
+      <div class="card accent-purple card-wide">
+        <div class="icon">✨</div>
+        <h3>Portfolio Unificado</h3>
+        <div class="subtitle">El Producto Final</div>
+        <p>Una sola pantalla con todo el portafolio crypto del usuario, sin importar cuántas wallets o cadenas use.</p>
+        <div class="inner-grid">
+          <div class="inner-item">
+            <h4>💵 Balance Total</h4>
+            <p>Valor consolidado en USD/EUR de todas las wallets</p>
+          </div>
+          <div class="inner-item">
+            <h4>📊 Distribución</h4>
+            <p>Pie chart por cadena, por token, por wallet</p>
+          </div>
+          <div class="inner-item">
+            <h4>📈 Performance</h4>
+            <p>PnL 24h, 7d, 30d. Histórico de portafolio</p>
+          </div>
+          <div class="inner-item">
+            <h4>🔔 Alertas</h4>
+            <p>Notificaciones de precio, movimientos grandes</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-            // Init charts if needed
-            if (tabName === 'engine' && !dynoChartInstance) {
-                setTimeout(initDynoChart, 100); // Small delay for layout calculation
-            }
-            if (tabName === 'drivetrain' && !transChartInstance) {
-                setTimeout(initTransChart, 100);
-            }
-        }
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>Diseñado como referencia de arquitectura para <strong style="color: var(--text-primary);">CryptoFolio</strong></p>
+    <p class="mono">turborepo · expo · fastify · postgresql · redis · drizzle · typescript</p>
+  </footer>
 
-        // Chart 1: Radar (Dashboard)
-        function initRadarChart() {
-            const ctx = document.getElementById('radarChart').getContext('2d');
-            radarChartInstance = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: ['Potencia Stock', 'Potencial Tuning', 'Rigidez Chasis', 'Feedback Dirección', 'Transmisión', 'Frenos Stock'],
-                    datasets: [{
-                        label: 'WRX VB (FA24)',
-                        data: [7, 9, 9, 5, 4, 5],
-                        fill: true,
-                        backgroundColor: 'rgba(29, 78, 216, 0.2)',
-                        borderColor: 'rgb(29, 78, 216)',
-                        pointBackgroundColor: 'rgb(29, 78, 216)',
-                    }, {
-                        label: 'STI (EJ25)',
-                        data: [8, 7, 7, 9, 10, 9],
-                        fill: true,
-                        backgroundColor: 'rgba(220, 38, 38, 0.2)',
-                        borderColor: 'rgb(220, 38, 38)',
-                        pointBackgroundColor: 'rgb(220, 38, 38)',
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        r: {
-                            angleLines: { display: true },
-                            suggestedMin: 0,
-                            suggestedMax: 10
-                        }
-                    }
-                }
-            });
-        }
+</div>
 
-        // Chart 2: Line (Engine) - Dynamic
-        function initDynoChart() {
-            const ctx = document.getElementById('dynoChart').getContext('2d');
-            dynoChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['1500', '2500', '3500', '4500', '5500', '6500', 'Redline'],
-                    datasets: [{
-                        label: 'VB FA24 (Torque lb-ft)',
-                        data: dynoData.stock.fa24,
-                        borderColor: 'rgb(29, 78, 216)',
-                        backgroundColor: 'rgba(29, 78, 216, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    },
-                    {
-                        label: 'STI EJ25 (Torque lb-ft)',
-                        data: dynoData.stock.ej25,
-                        borderColor: 'rgb(220, 38, 38)',
-                        backgroundColor: 'rgba(220, 38, 38, 0.0)',
-                        borderDash: [5, 5],
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return context.dataset.label + ': ' + context.parsed.y + ' lb-ft';
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'Torque (lb-ft)' }
-                        },
-                        x: {
-                            title: { display: true, text: 'RPM' }
-                        }
-                    }
-                }
-            });
-        }
-
-        function updateDynoChart(stage) {
-            if (!dynoChartInstance) return;
-            
-            // Update Data
-            dynoChartInstance.data.datasets[0].data = dynoData[stage].fa24;
-            dynoChartInstance.data.datasets[1].data = dynoData[stage].ej25;
-            
-            // Update UI Text
-            document.getElementById('dyno-analysis-text').innerHTML = analysisText[stage];
-            
-            dynoChartInstance.update();
-        }
-
-        // Chart 3: Bar (Drivetrain)
-        function initTransChart() {
-            const ctx = document.getElementById('transChart').getContext('2d');
-            transChartInstance = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['WRX VB (Stock Trans)', 'WRX VB (Límite Seguro)', 'STI (Stock Trans)'],
-                    datasets: [{
-                        label: 'Capacidad de Torque (Nm)',
-                        data: [350, 450, 800],
-                        backgroundColor: [
-                            'rgba(156, 163, 175, 0.6)', // Gray
-                            'rgba(29, 78, 216, 0.6)', // Blue
-                            'rgba(220, 38, 38, 0.8)'  // Red
-                        ],
-                        borderColor: [
-                            'rgb(156, 163, 175)',
-                            'rgb(29, 78, 216)',
-                            'rgb(220, 38, 38)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'Torque (Nm)' }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false }
-                    }
-                }
-            });
-        }
-    </script>
 </body>
 </html>
