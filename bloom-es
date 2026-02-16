@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React + Capacitor Translation Libraries: A Comparative Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom Chart Container Styles for Responsiveness */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px; /* Cap width for readability */
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px; /* Base height */
+            max-height: 450px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+
+        /* Flowchart connector lines using simple CSS borders */
+        .connector-line {
+            width: 2px;
+            background-color: #CBD5E1;
+            flex-grow: 1;
+            min-height: 20px;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #F0F9FF; /* Light blue tint from palette */
+        }
+
+        /* Loading Spinner Animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+    <!-- 
+        Palette Selected: Energetic & Playful (Vibrant Blues & Pinks)
+        Primary: #2563EB (Bright Blue)
+        Secondary: #DB2777 (Pink/Magenta)
+        Accent: #059669 (Emerald)
+        Background: #F0F9FF (Very light blue)
+        Text: #1E293B (Slate 900)
+    -->
+</head>
+<body class="text-slate-800">
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-r from-blue-600 to-pink-600 text-white shadow-lg">
+        <div class="container mx-auto px-6 py-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">Translation Engines for React + Capacitor</h1>
+            <p class="text-xl md:text-2xl font-light opacity-90 max-w-3xl mx-auto">
+                Choosing the right internationalization (i18n) strategy to balance performance, bundle size, and developer experience in hybrid mobile apps.
+            </p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 space-y-12">
+
+        <!-- Introduction -->
+        <section class="max-w-4xl mx-auto text-center">
+            <h2 class="text-3xl font-bold text-slate-800 mb-6">The Mobile Context</h2>
+            <p class="text-lg leading-relaxed text-slate-600">
+                Building for Capacitor means your React app runs inside a WebView on a mobile device. Unlike standard web apps, 
+                <strong>bundle size</strong> and <strong>memory usage</strong> are critical constraints. A heavy library can slow down your 
+                startup time (TTI), while a complex API can hinder development speed. We are analyzing the four top contenders: 
+                <span class="font-semibold text-blue-600">react-i18next</span>, 
+                <span class="font-semibold text-pink-600">react-intl</span>, 
+                <span class="font-semibold text-emerald-600">LinguiJS</span>, and 
+                <span class="font-semibold text-purple-600">typesafe-i18n</span>.
+            </p>
+        </section>
+
+        <!-- Section 1: Market Dominance -->
+        <section class="bg-white rounded-2xl shadow-md p-6 md:p-10 border-t-4 border-blue-500">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                <div class="md:col-span-1">
+                    <h3 class="text-2xl font-bold text-blue-700 mb-4">Community Adoption</h3>
+                    <p class="text-slate-600 mb-4">
+                        <strong>Goal: Compare.</strong> <br>
+                        React-i18next is the undisputed giant in the room. Its massive adoption means endless plugins, 
+                        StackOverflow answers, and ChatGPT examples. For a team needing stability and resources, this 
+                        metric is hard to ignore.
+                    </p>
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                        <strong class="block text-blue-800 text-lg mb-1">Key Takeaway</strong>
+                        <p class="text-sm text-blue-700">
+                            React-i18next has 3x the downloads of its nearest competitor, ensuring long-term maintenance safety.
+                        </p>
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <div class="chart-container">
+                        <canvas id="adoptionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Mobile Constraints (Size vs Performance) -->
+        <section class="bg-white rounded-2xl shadow-md p-6 md:p-10 border-t-4 border-pink-500">
+            <div class="mb-8">
+                <h3 class="text-2xl font-bold text-pink-700 mb-4">The "Heavy Lift" Analysis</h3>
+                <p class="text-slate-600 max-w-4xl">
+                    <strong>Goal: Relationships (Size vs. DX).</strong> <br>
+                    In Capacitor, every kilobyte counts towards the initial cold boot of your app. 
+                    <strong>LinguiJS</strong> and <strong>typesafe-i18n</strong> use compile-time optimization to drastically reduce the 
+                    Javascript shipped to the user. <strong>React-intl</strong> and <strong>react-i18next</strong> rely more on runtime processing, 
+                    offering flexibility at the cost of bundle size.
+                </p>
+            </div>
+            
+            <div class="chart-container mx-auto">
+                <canvas id="performanceChart"></canvas>
+            </div>
+            <p class="text-center text-sm text-slate-500 mt-4 italic">
+                * Lower Bundle Size (Left) is better. Higher Developer Satisfaction (Top) is better. Bubble size represents relative Feature Count.
+            </p>
+        </section>
+
+        <!-- Section 3: Technical Radar -->
+        <section class="bg-white rounded-2xl shadow-md p-6 md:p-10 border-t-4 border-emerald-500">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div class="order-2 lg:order-1">
+                     <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+                <div class="order-1 lg:order-2 flex flex-col justify-center">
+                    <h3 class="text-2xl font-bold text-emerald-700 mb-4">Scoring the Ecosystem</h3>
+                    <p class="text-slate-600 mb-6">
+                        <strong>Goal: Compare (Multi-variable).</strong> <br>
+                        We evaluated each library on five axes crucial for modern React development.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="font-bold text-emerald-600 w-32 shrink-0">Type Safety:</span>
+                            <span class="text-slate-600"><strong>typesafe-i18n</strong> wins effortlessly. It generates TS definitions for your translation keys, preventing missing strings at compile time.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="font-bold text-blue-600 w-32 shrink-0">Ecosystem:</span>
+                            <span class="text-slate-600"><strong>react-i18next</strong> has connectors for everything (backend loading, caching, browser detection).</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="font-bold text-pink-600 w-32 shrink-0">Performance:</span>
+                            <span class="text-slate-600"><strong>LinguiJS</strong> compiles messages to standard JS functions, making it incredibly fast at runtime.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Architecture Decision Tree -->
+        <section class="bg-slate-800 text-white rounded-2xl shadow-lg p-6 md:p-10">
+            <h3 class="text-3xl font-bold text-center mb-2 text-white">Which One Fits Your App?</h3>
+            <p class="text-center text-slate-300 mb-10">Start at the top to find your recommended path.</p>
+            
+            <!-- CSS Flowchart Implementation -->
+            <div class="flex flex-col items-center w-full max-w-4xl mx-auto space-y-4">
+                
+                <!-- Start Node -->
+                <div class="bg-white text-slate-900 px-8 py-4 rounded-full font-bold shadow-lg text-lg border-4 border-blue-500 z-10">
+                    START: Do you need Type Safety?
+                </div>
+                
+                <div class="h-8 border-l-2 border-slate-500 border-dashed"></div>
+                
+                <!-- Level 1 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+                    <!-- Path A -->
+                    <div class="flex flex-col items-center">
+                        <div class="bg-blue-600 text-white px-6 py-3 rounded-lg text-center w-full max-w-xs shadow">
+                            Yes, strict TypeScript is mandatory.
+                        </div>
+                        <div class="h-6 border-l-2 border-slate-500"></div>
+                        <div class="bg-white text-slate-900 px-6 py-3 rounded-lg text-center w-full max-w-xs border-l-4 border-purple-500 shadow">
+                            <strong>Is bundle size critical?</strong><br><span class="text-sm opacity-75">(e.g., users on poor data)</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 w-full max-w-xs mt-4">
+                            <div class="text-center">
+                                <div class="text-xs text-slate-400 mb-1">Yes (Smallest)</div>
+                                <div class="bg-purple-100 text-purple-800 p-3 rounded font-bold border border-purple-300">
+                                    typesafe-i18n
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-slate-400 mb-1">No (Standard)</div>
+                                <div class="bg-emerald-100 text-emerald-800 p-3 rounded font-bold border border-emerald-300">
+                                    LinguiJS
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Path B -->
+                    <div class="flex flex-col items-center mt-8 md:mt-0">
+                        <div class="bg-pink-600 text-white px-6 py-3 rounded-lg text-center w-full max-w-xs shadow">
+                            No, flexibility & ecosystem matter more.
+                        </div>
+                        <div class="h-6 border-l-2 border-slate-500"></div>
+                        <div class="bg-white text-slate-900 px-6 py-3 rounded-lg text-center w-full max-w-xs border-l-4 border-blue-500 shadow">
+                            <strong>Do you need backend message loading?</strong>
+                        </div>
+                         <div class="grid grid-cols-2 gap-4 w-full max-w-xs mt-4">
+                            <div class="text-center">
+                                <div class="text-xs text-slate-400 mb-1">Yes (CMS Integration)</div>
+                                <div class="bg-blue-100 text-blue-800 p-3 rounded font-bold border border-blue-300">
+                                    react-i18next
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-xs text-slate-400 mb-1">No (Standard/Legacy)</div>
+                                <div class="bg-pink-100 text-pink-800 p-3 rounded font-bold border border-pink-300">
+                                    react-intl
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Summary Table -->
+        <section class="max-w-5xl mx-auto">
+             <h3 class="text-2xl font-bold text-slate-800 mb-6 text-center">Snapshot Comparison</h3>
+             <div class="overflow-x-auto bg-white rounded-xl shadow-md">
+                 <table class="w-full text-left border-collapse">
+                     <thead>
+                         <tr class="bg-slate-100 text-slate-600 uppercase text-sm leading-normal">
+                             <th class="py-3 px-6 text-left">Library</th>
+                             <th class="py-3 px-6 text-center">Est. Bundle Size</th>
+                             <th class="py-3 px-6 text-center">Extraction Tooling</th>
+                             <th class="py-3 px-6 text-center">Pluralization</th>
+                             <th class="py-3 px-6 text-center">Ideal Use Case</th>
+                         </tr>
+                     </thead>
+                     <tbody class="text-slate-600 text-sm font-light">
+                         <tr class="border-b border-slate-200 hover:bg-slate-50">
+                             <td class="py-3 px-6 text-left whitespace-nowrap font-bold text-blue-600">react-i18next</td>
+                             <td class="py-3 px-6 text-center">~14kB (Heavy)</td>
+                             <td class="py-3 px-6 text-center">Excellent</td>
+                             <td class="py-3 px-6 text-center">Runtime (Complex)</td>
+                             <td class="py-3 px-6 text-center">Large, dynamic apps</td>
+                         </tr>
+                         <tr class="border-b border-slate-200 hover:bg-slate-50">
+                             <td class="py-3 px-6 text-left whitespace-nowrap font-bold text-pink-600">react-intl</td>
+                             <td class="py-3 px-6 text-center">~12kB (Med)</td>
+                             <td class="py-3 px-6 text-center">Standard (CLI)</td>
+                             <td class="py-3 px-6 text-center">ICU Standard</td>
+                             <td class="py-3 px-6 text-center">Enterprise / Banking</td>
+                         </tr>
+                         <tr class="border-b border-slate-200 hover:bg-slate-50">
+                             <td class="py-3 px-6 text-left whitespace-nowrap font-bold text-emerald-600">LinguiJS</td>
+                             <td class="py-3 px-6 text-center">~5kB (Light)</td>
+                             <td class="py-3 px-6 text-center">Native / Required</td>
+                             <td class="py-3 px-6 text-center">ICU (Compiled)</td>
+                             <td class="py-3 px-6 text-center">Performance critical</td>
+                         </tr>
+                         <tr class="border-b border-slate-200 hover:bg-slate-50">
+                             <td class="py-3 px-6 text-left whitespace-nowrap font-bold text-purple-600">typesafe-i18n</td>
+                             <td class="py-3 px-6 text-center">&lt; 1kB (Micro)</td>
+                             <td class="py-3 px-6 text-center">Generator based</td>
+                             <td class="py-3 px-6 text-center">Simple Functions</td>
+                             <td class="py-3 px-6 text-center">Strict TypeScript apps</td>
+                         </tr>
+                     </tbody>
+                 </table>
+             </div>
+        </section>
+
+        <!-- New AI Section -->
+        <section id="ai-advisor" class="bg-gradient-to-br from-indigo-900 to-slate-900 text-white rounded-2xl shadow-lg p-6 md:p-10 border border-indigo-500 relative overflow-hidden">
+            <!-- decorative background elements -->
+            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-indigo-600 opacity-20 blur-3xl"></div>
+            
+            <h3 class="text-3xl font-bold mb-4 relative z-10 flex items-center gap-2">
+                <span>✨</span> Gemini AI Architecture Advisor
+            </h3>
+            <p class="text-indigo-200 mb-6 relative z-10 max-w-2xl">
+                Not sure which library fits your specific scenario? Describe your project (e.g., team size, tech stack, priorities like 'strict Typescript' or 'CMS integration') and let Google's Gemini AI analyze the data to recommend the best strategy.
+            </p>
+
+            <div class="relative z-10 space-y-4">
+                <textarea id="userProjectDescription" rows="3" class="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-600 text-white placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400" placeholder="e.g., We are a team of 10 building a high-performance banking app using TypeScript. Security and type-safety are more important than ease of use."></textarea>
+                
+                <button onclick="getRecommendation()" id="recommendBtn" class="bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-lg hover:shadow-indigo-500/50">
+                    <span>✨</span> Get AI Recommendation
+                </button>
+
+                <div id="aiResponse" class="hidden mt-6 bg-slate-800/50 rounded-lg p-6 border border-slate-700">
+                    <h4 class="text-lg font-semibold text-indigo-300 mb-2">Recommendation:</h4>
+                    <div id="aiResponseText" class="prose prose-invert max-w-none text-slate-300 text-sm leading-relaxed"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-8 mt-12 text-center">
+        <p>Analysis for React + Capacitor implementation strategy. 2024-2025 Landscape.</p>
+    </footer>
+
+    <!-- Chart Logic -->
+    <script>
+        // --- Gemini AI Logic ---
+        async function getRecommendation() {
+            const input = document.getElementById('userProjectDescription').value;
+            if (!input.trim()) {
+                alert("Please describe your project first so Gemini can help!");
+                return;
+            }
+            
+            const btn = document.getElementById('recommendBtn');
+            const responseDiv = document.getElementById('aiResponse');
+            const responseText = document.getElementById('aiResponseText');
+            
+            // Loading State
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2 inline-block text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Analyzing with Gemini...`;
+            responseDiv.classList.add('hidden');
+            
+            // Context from the infographic for the AI
+            const context = `
+            You are a Senior Frontend Architect. Use the following analysis of React i18n libraries to recommend the best choice for the user's project.
+            
+            Data Comparison:
+            - react-i18next: Market leader (4.2M downloads), Heavy bundle (14kb), Excellent Ecosystem, Runtime processing. Best for: Large, dynamic apps needing flexibility.
+            - react-intl: Enterprise standard, Medium bundle (12kb), ICU Syntax, CLI extraction. Best for: Enterprise/Banking apps.
+            - LinguiJS: Performance focused, Light bundle (5kb), Compiled catalogs (ICU), Native extraction. Best for: Performance critical apps.
+            - typesafe-i18n: TypeScript focused, Micro bundle (<1kb), Simple functions, Generator based. Best for: Strict TypeScript apps where bundle size is critical.
+            
+            User's Project Description: "${input}"
+            
+            Task: Recommend ONE library from the list above. Explain why in 2-3 concise sentences based on the user's constraints (e.g. team size, typescript usage, performance needs). Bold the recommended library name.
+            `;
+
+            try {
+                const apiKey = ""; // Provided by environment
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: context }] }]
+                    })
+                });
+                
+                if (!response.ok) throw new Error('API Request Failed');
+
+                const data = await response.json();
+                const markdownText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Could not generate recommendation. Please try again.";
+                
+                // Simple formatting
+                responseText.innerHTML = markdownText
+                    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-indigo-400">$1</strong>')
+                    .replace(/\n/g, '<br>');
+                    
+                responseDiv.classList.remove('hidden');
+                
+            } catch (e) {
+                console.error(e);
+                alert("Sorry, there was an error connecting to the AI advisor. Please try again later.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<span>✨</span> Get AI Recommendation`;
+            }
+        }
+
+        // --- UTILITY: Label Wrapping Logic (>16 chars) ---
+        function wrapLabels(labels) {
+            return labels.map(label => {
+                if (typeof label === 'string' && label.length > 16) {
+                    const words = label.split(' ');
+                    const lines = [];
+                    let currentLine = words[0];
+
+                    for (let i = 1; i < words.length; i++) {
+                        if ((currentLine + " " + words[i]).length <= 16) {
+                            currentLine += " " + words[i];
+                        } else {
+                            lines.push(currentLine);
+                            currentLine = words[i];
+                        }
+                    }
+                    lines.push(currentLine);
+                    return lines;
+                }
+                return label;
+            });
+        }
+
+        // --- UTILITY: Tooltip Configuration ---
+        const commonTooltipOptions = {
+            callbacks: {
+                title: function(tooltipItems) {
+                    const item = tooltipItems[0];
+                    let label = item.chart.data.labels[item.dataIndex];
+                    if (Array.isArray(label)) {
+                        return label.join(' ');
+                    } else {
+                        return label;
+                    }
+                }
+            }
+        };
+
+        // --- CHART 1: Market Share (Bar) ---
+        const ctxAdoption = document.getElementById('adoptionChart').getContext('2d');
+        const rawLabelsAdoption = ['react-i18next (Market Leader)', 'react-intl (FormatJS)', 'LinguiJS (Compiled)', 'typesafe-i18n (Lightweight)'];
+        
+        new Chart(ctxAdoption, {
+            type: 'bar',
+            data: {
+                labels: wrapLabels(rawLabelsAdoption),
+                datasets: [{
+                    label: 'Weekly NPM Downloads (Approx. Millions)',
+                    data: [4.2, 1.3, 0.25, 0.04],
+                    backgroundColor: [
+                        'rgba(37, 99, 235, 0.8)', // Blue
+                        'rgba(219, 39, 119, 0.8)', // Pink
+                        'rgba(16, 185, 129, 0.8)', // Emerald
+                        'rgba(147, 51, 234, 0.8)'  // Purple
+                    ],
+                    borderColor: [
+                        'rgba(37, 99, 235, 1)',
+                        'rgba(219, 39, 119, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(147, 51, 234, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: commonTooltipOptions
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Weekly Downloads (Millions)' }
+                    }
+                }
+            }
+        });
+
+        // --- CHART 2: Performance Matrix (Scatter/Bubble) ---
+        // X: Bundle Size (smaller is better - inverted logic conceptually, but plotted linear)
+        // Y: Developer Satisfaction / Flexibility
+        // R: Complexity/Feature Set
+        const ctxPerformance = document.getElementById('performanceChart').getContext('2d');
+        
+        new Chart(ctxPerformance, {
+            type: 'bubble',
+            data: {
+                datasets: [
+                    {
+                        label: 'react-i18next',
+                        data: [{x: 14, y: 90, r: 25}], // Big bundle, High Satisfaction, Feature Rich
+                        backgroundColor: 'rgba(37, 99, 235, 0.7)',
+                        borderColor: 'rgba(37, 99, 235, 1)'
+                    },
+                    {
+                        label: 'react-intl',
+                        data: [{x: 12, y: 75, r: 20}],
+                        backgroundColor: 'rgba(219, 39, 119, 0.7)',
+                        borderColor: 'rgba(219, 39, 119, 1)'
+                    },
+                    {
+                        label: 'LinguiJS',
+                        data: [{x: 5, y: 85, r: 15}], // Small bundle, Good Satisfaction
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderColor: 'rgba(16, 185, 129, 1)'
+                    },
+                    {
+                        label: 'typesafe-i18n',
+                        data: [{x: 1, y: 80, r: 12}], // Tiny bundle, Good Satisfaction
+                        backgroundColor: 'rgba(147, 51, 234, 0.7)',
+                        borderColor: 'rgba(147, 51, 234, 1)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw.x + 'kB Bundle Size';
+                            }
+                        }
+                    },
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Bundle Overhead (kB) - Lower is Better for Mobile' },
+                        min: 0,
+                        max: 18,
+                        reverse: true // Visual trick: Right side = Smaller bundle (Better)
+                    },
+                    y: {
+                        title: { display: true, text: 'Developer Satisfaction Score' },
+                        min: 60,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        // --- CHART 3: Feature Radar ---
+        const ctxRadar = document.getElementById('radarChart').getContext('2d');
+        const radarLabels = wrapLabels(['Type Safety', 'Runtime Perf', 'Documentation', 'Ecosystem Plugins', 'Ease of Setup']);
+
+        new Chart(ctxRadar, {
+            type: 'radar',
+            data: {
+                labels: radarLabels,
+                datasets: [
+                    {
+                        label: 'react-i18next',
+                        data: [70, 75, 95, 100, 85], // Strong docs/ecosystem, avg types
+                        borderColor: 'rgba(37, 99, 235, 1)',
+                        backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                        pointBackgroundColor: 'rgba(37, 99, 235, 1)',
+                    },
+                    {
+                        label: 'typesafe-i18n',
+                        data: [100, 95, 80, 50, 70], // Perfect types/perf, smaller ecosystem
+                        borderColor: 'rgba(147, 51, 234, 1)',
+                        backgroundColor: 'rgba(147, 51, 234, 0.2)',
+                        pointBackgroundColor: 'rgba(147, 51, 234, 1)',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: commonTooltipOptions,
+                    legend: { position: 'top' }
+                },
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
