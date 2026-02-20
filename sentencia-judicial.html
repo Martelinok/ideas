@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentencia Judicial Colombiana - Renderización LaTeX</title>
+    
+    <!-- MathJax para renderizar LaTeX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        .documento {
+            background: white;
+            padding: 40px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+        
+        .encabezado {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .tribunal {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .sala {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+        
+        .info-caso {
+            margin: 20px 0;
+            line-height: 2;
+        }
+        
+        .info-caso strong {
+            font-weight: bold;
+        }
+        
+        h2 {
+            color: #333;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        
+        .antecedentes, .consideraciones, .resolutiva {
+            margin: 30px 0;
+            text-align: justify;
+        }
+        
+        .formula-box {
+            background: #f0f8ff;
+            border: 1px solid #4682b4;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        
+        .firma {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+        }
+        
+        .latex-demo {
+            background: #fff8dc;
+            border-left: 4px solid #ffa500;
+            padding: 10px 15px;
+            margin: 20px 0;
+        }
+        
+        .radicado {
+            background: #e6f3ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="documento">
+        <!-- Encabezado -->
+        <div class="encabezado">
+            <div class="tribunal">CORTE SUPREMA DE JUSTICIA</div>
+            <div class="sala">SALA DE CASACIÓN CIVIL</div>
+            <div>REPÚBLICA DE COLOMBIA</div>
+        </div>
+
+        <!-- Información del caso -->
+        <div class="radicado">
+            <strong>Radicación:</strong> 11001-31-03-001-2024-00123-01
+        </div>
+
+        <div class="info-caso">
+            <strong>Magistrado Ponente:</strong> Dr. LUIS ARMANDO TOLOSA VILLABONA<br>
+            <strong>Demandante:</strong> EMPRESA TECNOLÓGICA S.A.S.<br>
+            <strong>Demandado:</strong> COMPAÑÍA DE SERVICIOS LTDA.<br>
+            <strong>Proceso:</strong> Ordinario de mayor cuantía<br>
+            <strong>Fecha:</strong> Bogotá D.C., veinte (20) de febrero de dos mil veintiséis (2026)
+        </div>
+
+        <!-- Demostración LaTeX integrada -->
+        <div class="latex-demo">
+            <h3>Demostración de Renderización LaTeX</h3>
+            <p>Este documento incluye fórmulas matemáticas procesadas con LaTeX:</p>
+            
+            <div class="formula-box">
+                <strong>Cálculo de intereses moratorios:</strong><br>
+                $$I = C \times \left(1 + \frac{r}{100}\right)^n - C$$
+                
+                <p>Donde:</p>
+                <ul>
+                    <li>$I$ = Intereses</li>
+                    <li>$C$ = Capital inicial = $\$1.000.000$</li>
+                    <li>$r$ = Tasa de interés anual = $12\%$</li>
+                    <li>$n$ = Número de años = $3$</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Antecedentes -->
+        <div class="antecedentes">
+            <h2>I. ANTECEDENTES</h2>
+            <p>La empresa demandante EMPRESA TECNOLÓGICA S.A.S. interpuso demanda ordinaria contra COMPAÑÍA DE SERVICIOS LTDA., solicitando el pago de la suma de $\$1.000.000$ por concepto de servicios prestados, más los respectivos intereses moratorios.</p>
+            
+            <p>El contrato fue celebrado el 15 de enero de 2023, estableciendo que el pago debía realizarse dentro de los 30 días siguientes a la entrega del servicio. La entrega se efectuó el 20 de febrero de 2023, por lo que el pago debía realizarse antes del 22 de marzo de 2023.</p>
+        </div>
+
+        <!-- Consideraciones -->
+        <div class="consideraciones">
+            <h2>II. CONSIDERACIONES</h2>
+            
+            <h3>2.1. Sobre la obligación principal</h3>
+            <p>Está demostrado en el proceso que la demandada recibió los servicios contratados y que estos se ejecutaron conforme a las especificaciones técnicas acordadas. El valor del contrato asciende a:</p>
+            
+            <div class="formula-box">
+                <strong>Valor total del contrato:</strong><br>
+                $$V_{total} = V_{base} + IVA$$
+                $$V_{total} = \$840.336 + \$159.664 = \$1.000.000$$
+            </div>
+            
+            <h3>2.2. Sobre los intereses moratorios</h3>
+            <p>Conforme al artículo 1617 del Código Civil, en las obligaciones de dar una suma determinada de dinero, si el deudor incurre en mora, debe los intereses legales que son del $1\%$ mensual.</p>
+            
+            <div class="formula-box">
+                <strong>Cálculo de mora:</strong><br>
+                $$Mora = V_{capital} \times \frac{r_{mensual}}{100} \times n_{meses}$$
+                $$Mora = \$1.000.000 \times \frac{1}{100} \times 36 = \$360.000$$
+                
+                <p>Donde $n_{meses} = 36$ representa el tiempo transcurrido desde marzo de 2023 hasta febrero de 2026.</p>
+            </div>
+        </div>
+
+        <!-- Parte Resolutiva -->
+        <div class="resolutiva">
+            <h2>III. PARTE RESOLUTIVA</h2>
+            <p>En mérito de lo expuesto, la Corte Suprema de Justicia, Sala de Casación Civil, administrando justicia en nombre de la República y por autoridad de la ley,</p>
+            
+            <p><strong>RESUELVE:</strong></p>
+            
+            <p><strong>PRIMERO:</strong> CONDENAR a COMPAÑÍA DE SERVICIOS LTDA. a pagar a EMPRESA TECNOLÓGICA S.A.S. la suma de UN MILLÓN DE PESOS ($\$1.000.000$) por concepto de capital.</p>
+            
+            <p><strong>SEGUNDO:</strong> CONDENAR a COMPAÑÍA DE SERVICIOS LTDA. a pagar intereses moratorios sobre la suma anterior, calculados a la tasa del uno por ciento ($1\%$) mensual, desde el 22 de marzo de 2023 hasta el momento del pago efectivo.</p>
+            
+            <div class="formula-box">
+                <strong>Liquidación total al 20 de febrero de 2026:</strong><br>
+                $$Total = Capital + Intereses$$
+                $$Total = \$1.000.000 + \$360.000 = \$1.360.000$$
+            </div>
+            
+            <p><strong>TERCERO:</strong> CONDENAR en costas a la parte demandada.</p>
+        </div>
+
+        <!-- Demostración adicional de LaTeX -->
+        <div class="latex-demo">
+            <h3>Ejemplos adicionales de LaTeX</h3>
+            <p>Ecuaciones complejas que pueden ser útiles en contextos legales:</p>
+            
+            <div class="formula-box">
+                <strong>Distribución de responsabilidad proporcional:</strong><br>
+                $$R_i = \frac{C_i}{\sum_{j=1}^{n} C_j} \times D_{total}$$
+                
+                <p>Para matrices de correlación en análisis de causalidad:</p>
+                $$\rho_{X,Y} = \frac{\text{cov}(X,Y)}{\sigma_X \sigma_Y} = \frac{E[(X-\mu_X)(Y-\mu_Y)]}{\sigma_X \sigma_Y}$$
+                
+                <p>Integral para cálculo de daños continuos en el tiempo:</p>
+                $$D = \int_{t_0}^{t_1} f(t) \, dt$$
+            </div>
+        </div>
+
+        <!-- Firma -->
+        <div class="firma">
+            <p><strong>LUIS ARMANDO TOLOSA VILLABONA</strong><br>
+            Magistrado Ponente</p>
+            
+            <p style="margin-top: 30px; font-size: 12px; font-style: italic;">
+                Este documento fue generado con renderización LaTeX usando MathJax<br>
+                Repositorio: <a href="https://github.com/Martelinok/ideas">github.com/Martelinok/ideas</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
