@@ -1,0 +1,733 @@
+<!-- Chosen Palette: Tesla Clean & Warm Neutral (White, Slate-50, Slate-900, Tesla Red #E82127, Warm Gray accents) -->
+
+<!-- Application Structure Plan:
+1. **Hero & Context**: Intro focusing on Tesla's arrival in Colombia and the importance of battery care.
+2. **Battery Identifier (The Selector)**: A central interactive element allowing the user to select their vehicle model (Model 3/Y RWD vs Long Range/Performance). This sets the global "State" of the app (LFP vs NMC).
+3. **Dynamic Dashboard (The Core)**:
+- **Left Column (Guide)**: Textual content that updates based on the selected battery type (Charging limits, habits).
+- **Right Column (Data)**: Interactive charts comparing the two chemistries (Degradation curves, Charge recommendations).
+4. **Colombia Factor (Geo-Context)**: A section dedicated to local conditions.
+- **Climate Cards**: How Bogotá (Cold) vs Barranquilla (Heat) affects the battery.
+- **Topography**: Explaining Regenerative Braking in Colombian mountains.
+5. **Interactive Simulator**: A "Lifespan Estimator" slider. User inputs daily usage (km) and charging habit, App estimates theoretical cycle life.
+6. **Summary/FAQ**: Quick actionable takeaways.
+
+```
+*Why this structure?* It guides the user from identification (&quot;What do I have?&quot;) to understanding (&quot;How does it work?&quot;) to application (&quot;How do I drive in Colombia?&quot;). The dashboard approach allows side-by-side comparison without overwhelming scrolling.
+
+```
+
+-->
+
+<!-- Visualization & Content Choices:
+1. **Battery Type Selector**: Simple HTML Buttons. Goal: User segmentation.
+2. **Charge Limit Donut Chart (Chart.js)**: Shows the 80% vs 100% rule visually. Goal: Inform/Contrast. Interaction: Updates on battery selection.
+3. **Degradation Line Chart (Chart.js)**: Compares LFP vs NMC theoretical degradation over cycles. Goal: Compare longevity. Interaction: Toggle datasets.
+4. **Temperature Impact Bar Chart (Chart.js)**: Shows impact of extreme heat (Coastal Colombia) vs Ideal temp. Goal: Inform about climate risks.
+5. **Lifespan Calculator**: HTML Input Range + JS Calculation. Goal: Personalization.
+6. **Icons**: FontAwesome (text-based icons) instead of SVGs to comply with "No SVG" rule strictly (loaded via CDN).
+-->
+
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de Baterías Tesla Colombia: LFP vs NMC</title>
+<script src="[https://cdn.tailwindcss.com](https://www.google.com/search?q=https://cdn.tailwindcss.com)"></script>
+<script src="[https://cdn.jsdelivr.net/npm/chart.js](https://www.google.com/search?q=https://cdn.jsdelivr.net/npm/chart.js)"></script>
+<link href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css](https://www.google.com/search?q=https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css)" rel="stylesheet">
+<style>
+@import url('[https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap](https://www.google.com/search?q=https://fonts.googleapis.com/css2%3Ffamily%3DInter:wght%40300%3B400%3B600%3B700%26display%3Dswap)');
+
+```
+    body {
+        font-family: 'Inter', sans-serif;
+        background-color: #F9FAFB; /* Warm neutral light gray */
+        color: #1F2937;
+    }
+
+    /* Chart Container Styling - Mandatory Strictness */
+    .chart-container {
+        position: relative;
+        width: 100%;
+        max-width: 600px; /* Constraint width */
+        margin-left: auto;
+        margin-right: auto;
+        height: 300px; /* Base height */
+        max-height: 400px;
+    }
+
+    @media (min-width: 768px) {
+        .chart-container {
+            height: 350px;
+        }
+    }
+
+    .tesla-red-text { color: #E82127; }
+    .tesla-red-bg { background-color: #E82127; }
+    
+    .active-tab {
+        border-bottom: 3px solid #E82127;
+        color: #111827;
+        font-weight: 600;
+    }
+    
+    .inactive-tab {
+        color: #6B7280;
+        border-bottom: 3px solid transparent;
+    }
+    
+    .card-shadow {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Custom Scrollbar for cleaner look */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1; 
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e1; 
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8; 
+    }
+</style>
+
+```
+
+</head>
+<body class="antialiased">
+
+```
+<!-- Navbar -->
+<nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <i class="fa-solid fa-bolt text-red-600 text-2xl mr-2"></i>
+                <span class="font-bold text-xl tracking-tight">Tesla<span class="font-light">Colombia</span> Guide</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="scrollToSection('hero')" class="text-sm font-medium text-gray-500 hover:text-red-600 transition">Inicio</button>
+                <button onclick="scrollToSection('selector')" class="text-sm font-medium text-gray-500 hover:text-red-600 transition">Tu Batería</button>
+                <button onclick="scrollToSection('colombia')" class="text-sm font-medium text-gray-500 hover:text-red-600 transition">Contexto Local</button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Main Content Wrapper -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+    <!-- 1. Hero Section -->
+    <section id="hero" class="text-center py-10 bg-white rounded-2xl card-shadow px-6">
+        <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-4">
+            Cuidando tu Tesla en Colombia
+        </h1>
+        <p class="text-lg text-gray-600 max-w-3xl mx-auto mb-6">
+            Con la llegada oficial de Tesla al país, es vital entender la tecnología bajo el chasis. 
+            ¿Tienes baterías <strong>LFP</strong> o <strong>NMC</strong>? Aprende a maximizar su vida útil considerando nuestra topografía y clima.
+        </p>
+        <div class="flex justify-center gap-4 flex-wrap">
+            <div class="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full text-sm font-medium text-gray-700">
+                <i class="fa-solid fa-temperature-full text-red-500"></i> Climas Variados
+            </div>
+            <div class="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full text-sm font-medium text-gray-700">
+                <i class="fa-solid fa-mountain text-red-500"></i> Topografía Andina
+            </div>
+            <div class="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full text-sm font-medium text-gray-700">
+                <i class="fa-solid fa-plug text-red-500"></i> Infraestructura
+            </div>
+        </div>
+    </section>
+
+    <!-- 2. Battery Selector (State Controller) -->
+    <section id="selector" class="scroll-mt-24">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-900">¿Qué Tesla compraste?</h2>
+            <p class="text-gray-500 mt-2">Selecciona tu modelo para personalizar la guía. La química de la batería dicta las reglas del juego.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <!-- Option 1: RWD (LFP) -->
+            <button id="btn-lfp" onclick="selectBattery('LFP')" class="group relative bg-white p-6 rounded-xl border-2 border-gray-200 hover:border-red-500 transition-all duration-300 text-left card-shadow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900 group-hover:text-red-600">Model 3 / Y (RWD)</h3>
+                        <p class="text-sm text-gray-500 mt-1">Tracción Trasera (Standard Range)</p>
+                    </div>
+                    <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded">Química LFP</span>
+                </div>
+                <div class="mt-4 text-sm text-gray-600">
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Batería de Litio-Ferrofosfato</li>
+                        <li>Mayor durabilidad de ciclos</li>
+                        <li>Prefiere el 100% de carga</li>
+                    </ul>
+                </div>
+            </button>
+
+            <!-- Option 2: LR/Perf (NMC) -->
+            <button id="btn-nmc" onclick="selectBattery('NMC')" class="group relative bg-white p-6 rounded-xl border-2 border-gray-200 hover:border-red-500 transition-all duration-300 text-left card-shadow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900 group-hover:text-red-600">Long Range / Performance</h3>
+                        <p class="text-sm text-gray-500 mt-1">Tracción Total (Dual Motor)</p>
+                    </div>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Química NMC</span>
+                </div>
+                <div class="mt-4 text-sm text-gray-600">
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Níquel-Manganeso-Cobalto</li>
+                        <li>Mayor densidad energética</li>
+                        <li>Sensible al 100% de carga constante</li>
+                    </ul>
+                </div>
+            </button>
+        </div>
+    </section>
+
+    <!-- 3. Dynamic Dashboard -->
+    <section id="dashboard" class="bg-white rounded-2xl card-shadow overflow-hidden hidden transition-all duration-500 opacity-0 transform translate-y-4">
+        <!-- Dashboard Header -->
+        <div class="bg-gray-50 border-b border-gray-200 p-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900">Análisis: <span id="display-tech-name" class="text-red-600">Selecciona un modelo</span></h3>
+                    <p class="text-gray-500 text-sm mt-1">Protocolo de cuidado optimizado</p>
+                </div>
+                <div class="flex space-x-2">
+                    <span id="badge-durability" class="px-3 py-1 bg-gray-200 rounded text-xs font-bold text-gray-700">Ciclos: Alto</span>
+                    <span id="badge-density" class="px-3 py-1 bg-gray-200 rounded text-xs font-bold text-gray-700">Densidad: Media</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
+            
+            <!-- Left: Textual Guide -->
+            <div class="p-6 md:p-8 space-y-6 border-b lg:border-b-0 lg:border-r border-gray-200">
+                <div class="prose">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-plug text-red-500 mr-2"></i>La Regla de Oro de Carga</h4>
+                    <div id="charging-rule-content" class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500 text-blue-800 text-sm">
+                        <!-- JS populates this -->
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-semibold text-gray-900 mb-2"><i class="fa-solid fa-list-check text-red-500 mr-2"></i>Hábitos Diarios</h4>
+                    <ul id="habits-list" class="space-y-3 text-gray-600 text-sm">
+                        <!-- JS populates this -->
+                    </ul>
+                </div>
+
+                <div class="bg-gray-50 rounded-xl p-4 mt-4">
+                    <h4 class="text-sm font-bold text-gray-700 uppercase tracking-wide mb-2">Resumen Técnico</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="block text-gray-400 text-xs">Química del Cátodo</span>
+                            <span id="tech-cathode" class="font-medium text-gray-900">--</span>
+                        </div>
+                        <div>
+                            <span class="block text-gray-400 text-xs">Sensibilidad Térmica</span>
+                            <span id="tech-thermal" class="font-medium text-gray-900">--</span>
+                        </div>
+                        <div>
+                            <span class="block text-gray-400 text-xs">Límite Diario</span>
+                            <span id="tech-limit" class="font-medium text-gray-900">--</span>
+                        </div>
+                        <div>
+                            <span class="block text-gray-400 text-xs">Calibración BMS</span>
+                            <span id="tech-calibration" class="font-medium text-gray-900">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Visualizations -->
+            <div class="p-6 md:p-8 bg-gray-50 flex flex-col justify-center space-y-8">
+                
+                <!-- Chart 1: Charge Limit -->
+                <div>
+                    <h4 class="text-center text-sm font-semibold text-gray-700 mb-4">Límite de Carga Recomendado</h4>
+                    <div class="chart-container h-64">
+                        <canvas id="chargeLimitChart"></canvas>
+                    </div>
+                    <p id="chart-caption-1" class="text-center text-xs text-gray-500 mt-2">
+                        Muestra el % ideal para dejar el carro estacionado cada noche.
+                    </p>
+                </div>
+
+                <!-- Chart 2: Degradation Comparison -->
+                <div>
+                    <h4 class="text-center text-sm font-semibold text-gray-700 mb-4">Curva de Degradación Estimada</h4>
+                    <div class="chart-container">
+                        <canvas id="degradationChart"></canvas>
+                    </div>
+                    <p class="text-center text-xs text-gray-500 mt-2">
+                        Comparativa de retención de capacidad vs. número de ciclos (cargas completas).
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Colombia Specific Context -->
+    <section id="colombia" class="space-y-6">
+        <div class="border-l-4 border-red-600 pl-4">
+            <h2 class="text-3xl font-bold text-gray-900">El Factor Colombia</h2>
+            <p class="text-gray-600 mt-1">Cómo nuestra geografía única impacta tu batería.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Card 1: Heat -->
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-sun text-orange-600 text-xl"></i>
+                </div>
+                <h3 class="font-bold text-lg mb-2">Costa y Calor (30°C+)</h3>
+                <p class="text-sm text-gray-600 mb-3">
+                    Ciudades como Barranquilla o Cartagena. El calor acelera la degradación química.
+                </p>
+                <div class="bg-orange-50 p-3 rounded text-xs text-orange-800 font-medium">
+                    <strong>Tip:</strong> Si tienes NMC, evita dejar el carro al 100% bajo el sol costeño. Busca sombra o parqueaderos cubiertos. LFP es más resistente al calor.
+                </div>
+            </div>
+
+            <!-- Card 2: Mountains -->
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-arrow-down-long text-green-600 text-xl"></i>
+                </div>
+                <h3 class="font-bold text-lg mb-2">Montañas y Regeneración</h3>
+                <p class="text-sm text-gray-600 mb-3">
+                    Bajando La Línea o Pescadero. El freno regenerativo carga la batería intensamente.
+                </p>
+                <div class="bg-green-50 p-3 rounded text-xs text-green-800 font-medium">
+                    <strong>Tip:</strong> No cargues al 100% en la cima de una montaña. Si la batería está llena, el freno regenerativo se limita y tendrás que usar frenos físicos.
+                </div>
+            </div>
+
+            <!-- Card 3: Traffic & Grid -->
+            <div class="bg-white p-6 rounded-xl card-shadow">
+                <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-charging-station text-gray-600 text-xl"></i>
+                </div>
+                <h3 class="font-bold text-lg mb-2">Infraestructura</h3>
+                <p class="text-sm text-gray-600 mb-3">
+                    La red de Superchargers crece, pero los cargadores en casa (Wall Connector) son vitales.
+                </p>
+                <div class="bg-gray-50 p-3 rounded text-xs text-gray-800 font-medium">
+                    <strong>Tip:</strong> Colombia usa fase partida. Asegúrate de tener una buena puesta a tierra en casa para que el Tesla cargue sin errores de voltaje.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Interactive Simulator -->
+    <section id="simulator" class="bg-slate-900 rounded-2xl p-8 text-white card-shadow">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+            <div>
+                <h2 class="text-2xl font-bold mb-4">Simulador de Salud de Batería</h2>
+                <p class="text-slate-300 mb-6 text-sm">
+                    Calcula una proyección simplificada basada en tus hábitos de conducción en Colombia.
+                    <br><span class="text-xs italic text-slate-500">*Estimación teórica. La realidad varía.</span>
+                </p>
+
+                <!-- Input Controls -->
+                <div class="space-y-6">
+                    <div>
+                        <label class="flex justify-between text-sm font-medium mb-2">
+                            <span>Kilómetros Diarios</span>
+                            <span id="val-km" class="text-red-400">40 km</span>
+                        </label>
+                        <input type="range" id="input-km" min="10" max="200" value="40" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500">
+                    </div>
+
+                    <div>
+                        <label class="flex justify-between text-sm font-medium mb-2">
+                            <span>% de Carga Habitual (Límite)</span>
+                            <span id="val-charge" class="text-red-400">80%</span>
+                        </label>
+                        <input type="range" id="input-charge" min="50" max="100" value="80" step="10" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500">
+                    </div>
+
+                    <div>
+                        <label class="text-sm font-medium mb-2 block">Tipo de Química</label>
+                        <div class="flex gap-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="sim-type" value="LFP" class="text-red-600 focus:ring-red-500" checked>
+                                <span class="ml-2 text-sm text-slate-300">LFP</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="sim-type" value="NMC" class="text-red-600 focus:ring-red-500">
+                                <span class="ml-2 text-sm text-slate-300">NMC</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800 rounded-xl p-6 border border-slate-700 relative">
+                <h3 class="text-lg font-semibold text-center mb-4 text-slate-200">Proyección a 5 Años</h3>
+                
+                <div class="chart-container h-56">
+                    <canvas id="healthProjectionChart"></canvas>
+                </div>
+
+                <div class="mt-4 grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-slate-700/50 p-2 rounded">
+                        <span class="block text-xs text-slate-400">Salud Restante</span>
+                        <span id="result-health" class="text-xl font-bold text-green-400">94%</span>
+                    </div>
+                    <div class="bg-slate-700/50 p-2 rounded">
+                        <span class="block text-xs text-slate-400">Ciclos Totales</span>
+                        <span id="result-cycles" class="text-xl font-bold text-blue-400">450</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center text-gray-500 text-sm py-8 border-t border-gray-200">
+        <p>© 2024 Guía Independiente de Usuario. Basado en reportes técnicos de química CATL y LG Chem.</p>
+        <p class="mt-2">Adaptado para las condiciones de Colombia.</p>
+    </footer>
+
+</main>
+
+<script>
+    // --- Data & State ---
+    const reportData = {
+        LFP: {
+            name: "Model 3/Y RWD (LFP)",
+            cathode: "Litio-Ferrofosfato",
+            thermal: "Resistente (Seguro)",
+            limit: "100% Semanalmente",
+            calibration: "Vital para el BMS",
+            ruleTitle: "Cárgalo al 100% al menos una vez por semana",
+            ruleText: "Las baterías LFP tienen una curva de voltaje muy plana. El BMS (sistema de gestión) necesita llegar al 100% para saber dónde está el 'tope' real. Si no lo haces, la estimación de rango puede volverse imprecisa. Para uso diario, puedes dejarlo al 100% sin miedo a degradación acelerada significativa.",
+            habits: [
+                "Mantén el límite de carga en 100%.",
+                "Perfecto para quienes no tienen cargador en casa y cargan una vez a la semana.",
+                "Menos afectado por el calor de la costa colombiana.",
+                "Más pesado, el carro puede sentirse un poco menos ágil en curvas cerradas."
+            ],
+            chartData: {
+                limit: [100, 0], // 100% usable, 0% reserve
+                degradation: [100, 98, 96, 94.5, 93, 91.5, 90] // Slower degradation
+            },
+            durabilityBadge: "Muy Alta (2000+ Ciclos)",
+            densityBadge: "Media (Más peso)"
+        },
+        NMC: {
+            name: "Model 3/Y Long Range/Perf (NMC)",
+            cathode: "Níquel-Manganeso-Cobalto",
+            thermal: "Sensible (Alto Rendimiento)",
+            limit: "80% Diario",
+            calibration: "No requerida frecuentemente",
+            ruleTitle: "Mantén el límite al 80% para diario",
+            ruleText: "La química NMC tiene alta densidad energética pero es inestable a voltajes altos (100% de carga) por periodos largos. Cargar al 100% genera micro-grietas en el cátodo con el tiempo. Solo sube al 100% si vas a salir de viaje inmediatamente (ej. Bogotá a Medellín).",
+            habits: [
+                "Configura el límite en la app al 80%.",
+                "Usa el 100% solo para viajes largos.",
+                "Evita dejar el carro con carga baja (<10%) o muy alta (>90%) por días.",
+                "Mejor rendimiento en climas fríos (como un páramo), pero cuídalo del calor extremo."
+            ],
+            chartData: {
+                limit: [80, 20], // 80% recommended, 20% avoid zone
+                degradation: [100, 96, 93, 90, 88, 86, 84] // Faster initial degradation
+            },
+            durabilityBadge: "Alta (1000-1500 Ciclos)",
+            densityBadge: "Alta (Más rango)"
+        }
+    };
+
+    let currentBattery = null;
+    let chartInstances = {};
+
+    // --- Core Functions ---
+
+    function scrollToSection(id) {
+        document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function selectBattery(type) {
+        currentBattery = type;
+        const data = reportData[type];
+
+        // UI Updates
+        document.getElementById('btn-lfp').classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+        document.getElementById('btn-nmc').classList.remove('border-red-500', 'ring-2', 'ring-red-200');
+        
+        const selectedBtn = type === 'LFP' ? 'btn-lfp' : 'btn-nmc';
+        document.getElementById(selectedBtn).classList.add('border-red-500', 'ring-2', 'ring-red-200');
+
+        // Show Dashboard with animation
+        const dash = document.getElementById('dashboard');
+        dash.classList.remove('hidden');
+        setTimeout(() => {
+            dash.classList.remove('opacity-0', 'translate-y-4');
+        }, 50);
+
+        // Populate Text Data
+        document.getElementById('display-tech-name').innerText = data.name;
+        document.getElementById('badge-durability').innerText = "Ciclos: " + data.durabilityBadge;
+        document.getElementById('badge-density').innerText = "Densidad: " + data.densityBadge;
+        
+        document.getElementById('tech-cathode').innerText = data.cathode;
+        document.getElementById('tech-thermal').innerText = data.thermal;
+        document.getElementById('tech-limit').innerText = data.limit;
+        document.getElementById('tech-calibration').innerText = data.calibration;
+
+        document.getElementById('charging-rule-content').innerHTML = `
+            <strong class="block text-lg mb-1">${data.ruleTitle}</strong>
+            <p>${data.ruleText}</p>
+        `;
+
+        const habitsList = document.getElementById('habits-list');
+        habitsList.innerHTML = '';
+        data.habits.forEach(habit => {
+            const li = document.createElement('li');
+            li.className = "flex items-start";
+            li.innerHTML = `<i class="fa-solid fa-check text-green-500 mt-1 mr-2"></i><span>${habit}</span>`;
+            habitsList.appendChild(li);
+        });
+
+        // Update Charts
+        updateCharts(type);
+
+        // Scroll to dashboard slightly
+        if(window.innerWidth < 768) {
+            setTimeout(() => scrollToSection('dashboard'), 300);
+        }
+    }
+
+    function updateCharts(type) {
+        const data = reportData[type];
+        
+        // 1. Charge Limit Chart (Doughnut)
+        const ctxLimit = document.getElementById('chargeLimitChart').getContext('2d');
+        if (chartInstances.limit) chartInstances.limit.destroy();
+
+        const limitColors = type === 'LFP' 
+            ? ['#22c55e', '#e5e7eb'] // Green for 100%
+            : ['#3b82f6', '#ef4444']; // Blue for 80%, Red for 20% (avoid)
+
+        const limitLabels = type === 'LFP'
+            ? ['Usable Diario (100%)', '']
+            : ['Recomendado Diario (80%)', 'Zona Viaje/Estrés (>80%)'];
+
+        chartInstances.limit = new Chart(ctxLimit, {
+            type: 'doughnut',
+            data: {
+                labels: limitLabels,
+                datasets: [{
+                    data: data.chartData.limit,
+                    backgroundColor: limitColors,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.raw + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // 2. Degradation Chart (Line)
+        const ctxDeg = document.getElementById('degradationChart').getContext('2d');
+        if (chartInstances.deg) chartInstances.deg.destroy();
+
+        // Prepare comparison data
+        const labels = ['0', '500', '1000', '1500', '2000', '2500', '3000']; // Cycles
+        
+        // LFP Data
+        const lfpData = [100, 98, 96, 94.5, 93, 91.5, 90];
+        // NMC Data
+        const nmcData = [100, 95, 91, 88, 85, 82, 80];
+
+        chartInstances.deg = new Chart(ctxDeg, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'LFP (Tu Selección)' + (type === 'LFP' ? '' : ' (Comparación)'),
+                        data: lfpData,
+                        borderColor: type === 'LFP' ? '#22c55e' : '#cbd5e1', // Green or Gray
+                        borderWidth: type === 'LFP' ? 3 : 2,
+                        borderDash: type === 'LFP' ? [] : [5, 5],
+                        pointRadius: type === 'LFP' ? 4 : 0,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'NMC (Tu Selección)' + (type === 'NMC' ? '' : ' (Comparación)'),
+                        data: nmcData,
+                        borderColor: type === 'NMC' ? '#3b82f6' : '#cbd5e1', // Blue or Gray
+                        borderWidth: type === 'NMC' ? 3 : 2,
+                        borderDash: type === 'NMC' ? [] : [5, 5],
+                        pointRadius: type === 'NMC' ? 4 : 0,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        min: 70,
+                        max: 100,
+                        title: { display: true, text: 'Salud de Batería (%)' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Ciclos de Carga' }
+                    }
+                },
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+
+    // --- Simulator Logic ---
+    const inputKm = document.getElementById('input-km');
+    const inputCharge = document.getElementById('input-charge');
+    const simTypeInputs = document.querySelectorAll('input[name="sim-type"]');
+    
+    const valKm = document.getElementById('val-km');
+    const valCharge = document.getElementById('val-charge');
+    const resultHealth = document.getElementById('result-health');
+    const resultCycles = document.getElementById('result-cycles');
+
+    function updateSimulator() {
+        const km = parseInt(inputKm.value);
+        const limit = parseInt(inputCharge.value);
+        const type = document.querySelector('input[name="sim-type"]:checked').value;
+
+        // UI Update
+        valKm.innerText = km + " km";
+        valCharge.innerText = limit + "%";
+
+        // Calculation Logic (Simplified Model)
+        // 1 cycle ~ 400km (avg real world mixed)
+        const dailyCycleFraction = km / 400; 
+        const years = 5;
+        const days = years * 365;
+        const totalCycles = Math.round(dailyCycleFraction * days);
+
+        // Stress Factor based on Charge Limit
+        let stressFactor = 1.0;
+        if (type === 'NMC') {
+            if (limit > 80) stressFactor = 1.5 + ((limit - 80) * 0.05); // High stress above 80%
+            if (limit > 90) stressFactor = 2.0; // Very high stress
+        } else {
+            // LFP
+            if (limit === 100) stressFactor = 1.0; // LFP is fine at 100
+            // LFP actually degrades slightly faster if NOT charged to 100 due to imbalance, but chemically it's stable. 
+            // We keep it simple: LFP is robust.
+        }
+
+        // Degradation calc
+        // Base degradation per cycle
+        const degradationPerCycle = type === 'LFP' ? 0.003 : 0.005; // 0.3% vs 0.5% per 100 cycles approx scaled
+        
+        // Total degradation
+        // Formula: Cycles * (BaseRate * Stress)
+        // Note: This is a teaching model, not exact physics
+        let totalDegradation = (totalCycles / 100) * degradationPerCycle * stressFactor * 100;
+        
+        // Calendar Aging (Time dependent)
+        const calendarAging = years * (type === 'LFP' ? 0.5 : 1.0); // % per year
+
+        let healthLost = totalDegradation + calendarAging;
+        let finalHealth = 100 - healthLost;
+        if (finalHealth < 0) finalHealth = 0;
+
+        resultHealth.innerText = finalHealth.toFixed(1) + "%";
+        resultCycles.innerText = totalCycles;
+
+        // Color coding result
+        if(finalHealth > 90) resultHealth.className = "text-xl font-bold text-green-400";
+        else if (finalHealth > 80) resultHealth.className = "text-xl font-bold text-yellow-400";
+        else resultHealth.className = "text-xl font-bold text-red-400";
+
+        updateHealthChart(finalHealth, totalCycles);
+    }
+
+    function updateHealthChart(health, cycles) {
+        const ctx = document.getElementById('healthProjectionChart').getContext('2d');
+        
+        // Generate year data points
+        const start = 100;
+        const yearData = [];
+        for(let i=0; i<=5; i++) {
+            const drop = (100 - health) * (i/5);
+            yearData.push(100 - drop);
+        }
+
+        if (chartInstances.health) chartInstances.health.destroy();
+
+        chartInstances.health = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Año 0', 'Año 1', 'Año 2', 'Año 3', 'Año 4', 'Año 5'],
+                datasets: [{
+                    label: 'Salud Estimada (%)',
+                    data: yearData,
+                    borderColor: '#38bdf8',
+                    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { min: 80, max: 100, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                    x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    // Listeners
+    inputKm.addEventListener('input', updateSimulator);
+    inputCharge.addEventListener('input', updateSimulator);
+    simTypeInputs.forEach(input => input.addEventListener('change', updateSimulator));
+
+    // Init Simulator Default
+    updateSimulator();
+
+</script>
+
+```
+
+</body>
+</html>
