@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificación Finca: Caballerizas & Camping</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfbf7; /* Warm neutral background */
+            color: #4a4a4a;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            color: #5c5346;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+        }
+
+        /* Chart Container Styling - MANDATORY */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px; /* Max width for readability */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity .2s;
+            border-radius: 4px;
+        }
+
+        .slider-thumb:hover {
+            opacity: 1;
+        }
+
+        .slider-thumb::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #8b9e83;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .slider-thumb::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #8b9e83;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .blueprint-grid {
+            background-size: 20px 20px;
+            background-image:
+                linear-gradient(to right, #f0f0f0 1px, transparent 1px),
+                linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
+        }
+        
+        .stall-block {
+            transition: all 0.3s ease;
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals & Nature (Sage Green, Terracotta, Taupe) -->
+    <!-- Application Structure Plan:
+        1. Header & Context: Brief intro derived from the audio to set the stage.
+        2. Dashboard Overview: High-level metrics comparing the two lots (areas).
+        3. Interactive Planner - Lote 1 (Caballerizas):
+           - Goal: Determine capacity based on user-adjustable stall sizes.
+           - Interaction: Sliders for dimensions.
+           - Viz: Doughnut chart (Space Usage) and a dynamic CSS Grid Layout representing the barn.
+        4. Interactive Planner - Lote 2 (Camping):
+           - Goal: Visualize parking layout and infrastructure needs.
+           - Interaction: Toggle layout types (Angled vs Parallel).
+           - Viz: Conceptual map of plumbing/drainage.
+        5. Recommendations: Textual summary of "Best Practices" derived from general construction knowledge applied to the specific request.
+    -->
+    <!-- Visualization & Content Choices:
+        - Chart.js Doughnut: Used to show the tight constraint of space in Lote 1 (Stalls vs Services vs Circulation).
+        - Chart.js Bar: Simple area comparison.
+        - Custom HTML/CSS Grids: Used for "Blueprints" because they allow responsive, block-based representation of rooms without SVG.
+        - Dynamic Text: Updates stall counts and capacity instantly to answer the "How many fit?" question from the audio.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-[#fdfbf7] text-gray-700 min-h-screen flex flex-col">
+
+    <!-- Navigation / Header -->
+    <header class="bg-white border-b border-gray-100 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center">
+                    <div class="text-2xl font-bold text-[#5c5346] font-serif">Finca: Proyecto Maestro</div>
+                </div>
+                <nav class="hidden md:flex space-x-8">
+                    <a href="#overview" class="text-[#5c5346] hover:text-[#8b9e83] px-3 py-2 rounded-md text-sm font-medium transition-colors">Resumen</a>
+                    <a href="#lote1" class="text-[#5c5346] hover:text-[#8b9e83] px-3 py-2 rounded-md text-sm font-medium transition-colors">Lote 1: Caballerizas</a>
+                    <a href="#lote2" class="text-[#5c5346] hover:text-[#8b9e83] px-3 py-2 rounded-md text-sm font-medium transition-colors">Lote 2: Camping</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+
+        <!-- Intro Section -->
+        <section id="overview" class="text-center max-w-4xl mx-auto">
+            <h1 class="text-4xl md:text-5xl font-bold mb-6 text-[#5c5346]">Planificación de Infraestructura</h1>
+            <p class="text-lg text-gray-600 leading-relaxed mb-8">
+                Basado en el requerimiento para la finca, esta herramienta interactiva analiza los dos lotes disponibles. 
+                El objetivo es optimizar el <strong>Lote 1 (35x13m)</strong> para un complejo ecuestre completo y el 
+                <strong>Lote 2 (12x25m)</strong> para una zona de camping de motorhomes con servicios hidráulicos.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <div class="card p-6 flex flex-col items-center">
+                    <h3 class="text-xl font-semibold mb-2 text-[#8b9e83]">Lote 1: Caballerizas</h3>
+                    <div class="text-4xl font-bold text-[#5c5346] mb-1">455 m²</div>
+                    <p class="text-sm text-gray-500">35m Largo x 13m Ancho</p>
+                    <div class="w-full mt-4 bg-gray-100 rounded-full h-2.5">
+                        <div class="bg-[#8b9e83] h-2.5 rounded-full" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div class="card p-6 flex flex-col items-center">
+                    <h3 class="text-xl font-semibold mb-2 text-[#d48c70]">Lote 2: Camping</h3>
+                    <div class="text-4xl font-bold text-[#5c5346] mb-1">300 m²</div>
+                    <p class="text-sm text-gray-500">25m Largo x 12m Ancho</p>
+                    <div class="w-full mt-4 bg-gray-100 rounded-full h-2.5">
+                        <div class="bg-[#d48c70] h-2.5 rounded-full" style="width: 66%"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lote 1: Caballerizas Analyzer -->
+        <section id="lote1" class="border-t border-gray-200 pt-12">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Controls & Context -->
+                <div class="lg:col-span-4 space-y-6">
+                    <div>
+                        <h2 class="text-3xl font-bold text-[#5c5346] mb-4">Diseño de Caballerizas</h2>
+                        <p class="text-gray-600 mb-4 text-sm">
+                            El reto es ubicar <strong>4 espacios de servicio</strong> (Bodega, Aperos/Droga, Cuarto Chalán, Picapasto) y maximizar el número de pesebreras en el área restante de 35x13m.
+                            Utilice los controles para ajustar las dimensiones y ver cuántos caballos caben cómodamente.
+                        </p>
+                    </div>
+
+                    <div class="card p-6 space-y-6">
+                        <h3 class="font-semibold text-lg border-b pb-2">Configuración</h3>
+                        
+                        <!-- Stall Size Slider -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Tamaño de Pesebrera: <span id="stallSizeVal" class="font-bold text-[#8b9e83]">3.5</span>m x <span id="stallSizeVal2" class="font-bold text-[#8b9e83]">3.5</span>m
+                            </label>
+                            <input type="range" min="3.0" max="4.0" step="0.1" value="3.5" class="slider-thumb w-full" id="stallSizeSlider">
+                            <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                <span>Compacta (3m)</span>
+                                <span>Amplia (4m)</span>
+                            </div>
+                        </div>
+
+                        <!-- Walkway Width Slider -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Ancho del Pasillo Central: <span id="walkwayVal" class="font-bold text-[#8b9e83]">3.0</span>m
+                            </label>
+                            <input type="range" min="2.0" max="4.0" step="0.5" value="3.0" class="slider-thumb w-full" id="walkwaySlider">
+                        </div>
+
+                        <!-- Results Box -->
+                        <div class="bg-[#fdfbf7] border border-[#e5e7eb] rounded-lg p-4 text-center">
+                            <div class="text-sm text-gray-500 uppercase tracking-wide font-semibold">Capacidad Estimada</div>
+                            <div class="text-5xl font-bold text-[#5c5346] my-2" id="totalStalls">10</div>
+                            <div class="text-sm text-gray-600">Pesebreras + 4 Cuartos de Servicio</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization -->
+                <div class="lg:col-span-8 space-y-6">
+                    <!-- Distribution Chart -->
+                    <div class="card p-6">
+                        <h3 class="font-semibold text-gray-700 mb-4 text-center">Distribución del Área Total (455 m²)</h3>
+                        <div class="chart-container">
+                            <canvas id="lote1Chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Layout Blueprint Simulator -->
+                    <div class="card p-6 overflow-hidden">
+                        <h3 class="font-semibold text-gray-700 mb-4 flex items-center justify-between">
+                            <span>Esquema de Planta Sugerido (Vista Superior)</span>
+                            <span class="text-xs bg-[#8b9e83] text-white px-2 py-1 rounded">Largo: 35m</span>
+                        </h3>
+                        <!-- Conceptual Grid Visualization -->
+                        <div class="w-full bg-white border-2 border-gray-300 relative blueprint-grid rounded h-64 flex flex-col items-center justify-center p-2" id="blueprintContainer">
+                            <!-- JS will populate this -->
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-4 text-xs justify-center">
+                            <div class="flex items-center"><span class="w-3 h-3 bg-[#8b9e83] rounded-sm mr-1"></span> Pesebrera</div>
+                            <div class="flex items-center"><span class="w-3 h-3 bg-[#d48c70] rounded-sm mr-1"></span> Servicios (Aperos, Heno, etc.)</div>
+                            <div class="flex items-center"><span class="w-3 h-3 bg-[#e5e7eb] border border-gray-300 rounded-sm mr-1"></span> Pasillo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lote 2: Camping Analyzer -->
+        <section id="lote2" class="border-t border-gray-200 pt-12 pb-12">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Context & Diagram -->
+                <div>
+                    <h2 class="text-3xl font-bold text-[#5c5346] mb-4">Zona de Camping (Mobile Homes)</h2>
+                    <p class="text-gray-600 mb-6 leading-relaxed">
+                        Para el lote de <strong>12m x 25m</strong>, la prioridad es la conectividad. Cada puesto necesita acceso a la línea de agua potable y al desagüe. Debido al ancho de 12m, se recomienda una distribución en "espina de pescado" o lateral con un carril de maniobra central o lateral.
+                    </p>
+                    
+                    <div class="card p-6">
+                        <h3 class="font-semibold text-lg mb-4 text-[#d48c70]">Esquema de Infraestructura Hidráulica</h3>
+                        <div class="relative w-full h-80 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 overflow-hidden flex flex-col">
+                            <!-- Main Pipe Representation -->
+                            <div class="absolute top-1/2 left-0 w-full h-4 bg-blue-200 transform -translate-y-1/2 flex items-center justify-center">
+                                <span class="text-blue-600 text-xs font-bold tracking-widest">LÍNEA PRINCIPAL AGUA</span>
+                            </div>
+                            <div class="absolute top-1/2 left-0 w-full h-4 bg-gray-300 transform translate-y-2 flex items-center justify-center mt-2 opacity-50">
+                                <span class="text-gray-700 text-xs font-bold tracking-widest">DRENAJE / ALCANTARILLADO</span>
+                            </div>
+
+                            <!-- Plots Simulation -->
+                            <div class="w-full h-full grid grid-cols-4 gap-2 p-2 relative z-10">
+                                <!-- Slots generated by JS -->
+                                <div class="col-span-1 border-2 border-[#d48c70] bg-white/80 rounded flex flex-col justify-center items-center text-center p-2 hover:bg-[#fff5f0] transition cursor-pointer group">
+                                    <div class="text-2xl">🚐</div>
+                                    <div class="text-xs font-bold mt-1 text-[#d48c70]">MH 1</div>
+                                    <div class="hidden group-hover:block text-[10px] text-gray-500 mt-1">Conexión a 2m</div>
+                                </div>
+                                <div class="col-span-1 border-2 border-[#d48c70] bg-white/80 rounded flex flex-col justify-center items-center text-center p-2 hover:bg-[#fff5f0] transition cursor-pointer group">
+                                    <div class="text-2xl">🚐</div>
+                                    <div class="text-xs font-bold mt-1 text-[#d48c70]">MH 2</div>
+                                    <div class="hidden group-hover:block text-[10px] text-gray-500 mt-1">Conexión a 8m</div>
+                                </div>
+                                <div class="col-span-1 border-2 border-[#d48c70] bg-white/80 rounded flex flex-col justify-center items-center text-center p-2 hover:bg-[#fff5f0] transition cursor-pointer group">
+                                    <div class="text-2xl">🚐</div>
+                                    <div class="text-xs font-bold mt-1 text-[#d48c70]">MH 3</div>
+                                    <div class="hidden group-hover:block text-[10px] text-gray-500 mt-1">Conexión a 14m</div>
+                                </div>
+                                <div class="col-span-1 border-2 border-[#d48c70] bg-white/80 rounded flex flex-col justify-center items-center text-center p-2 hover:bg-[#fff5f0] transition cursor-pointer group">
+                                    <div class="text-2xl">🚐</div>
+                                    <div class="text-xs font-bold mt-1 text-[#d48c70]">MH 4</div>
+                                    <div class="hidden group-hover:block text-[10px] text-gray-500 mt-1">Conexión a 20m</div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2 text-center">*Esquema conceptual. Las conexiones deben tener pendiente del 2% para drenaje.</p>
+                    </div>
+                </div>
+
+                <!-- Camping Logic -->
+                <div class="space-y-6">
+                    <div class="card p-6 h-full flex flex-col justify-center">
+                        <h3 class="font-semibold text-lg mb-4 text-[#5c5346]">Análisis de Capacidad Camping</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="text-gray-600">Largo Total Disponible</span>
+                                <span class="font-bold text-[#5c5346]">25 metros</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="text-gray-600">Espacio Promedio por MH (inc. holgura)</span>
+                                <span class="font-bold text-[#5c5346]">6 - 7 metros</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-[#fff5f0] border border-[#d48c70] rounded-lg">
+                                <span class="text-[#d48c70] font-bold">Capacidad Recomendada</span>
+                                <span class="font-bold text-2xl text-[#d48c70]">4 Unidades</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6">
+                            <h4 class="font-semibold text-sm text-gray-700 mb-2">Recomendaciones Técnicas:</h4>
+                            <ul class="text-sm text-gray-600 space-y-2 list-disc list-inside">
+                                <li>Instalar <strong>trampas de grasa</strong> individuales o una centralizada antes del pozo séptico.</li>
+                                <li>Ubicar tomas de corriente (110V/220V) en pedestales a prueba de lluvia junto a las tomas de agua.</li>
+                                <li>El suelo debe ser compactado con grava para evitar que los vehículos pesados se entierren en invierno.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final Summary -->
+        <section class="bg-[#5c5346] text-white rounded-xl p-8 mb-12">
+            <h2 class="text-2xl font-serif font-bold mb-4">Resumen Ejecutivo para Papá</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="font-bold text-[#d48c70] mb-2 uppercase tracking-wide text-sm">Caballerizas (Lote 35x13)</h3>
+                    <p class="text-gray-300 text-sm leading-relaxed">
+                        Con un diseño eficiente, se pueden acomodar cómodamente entre <strong>10 y 12 caballos</strong>, manteniendo los 4 cuartos de servicio requeridos (Bodega, Aperos, Chalán, Picapasto) en un bloque compacto de ~48m². Se recomienda un pasillo central de 3m para facilitar el giro de los caballos y ventilación cruzada.
+                    </p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-[#d48c70] mb-2 uppercase tracking-wide text-sm">Camping (Lote 12x25)</h3>
+                    <p class="text-gray-300 text-sm leading-relaxed">
+                        El lote permite <strong>4 espacios amplios</strong> para Mobile Homes. La clave es una "columna vertebral" de servicios que corra a lo largo de los 25 metros, permitiendo que los vehículos se conecten fácilmente al estacionar en batería o diagonal.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- CONSTANTS & DATA ---
+            const lot1 = {
+                width: 13,
+                length: 35,
+                totalArea: 455
+            };
+
+            // Fixed Service Areas (Estimates based on standard needs)
+            // Bodega (3x4), Aperos (3x3), Chalan (3x3), Picapasto (3x3)
+            // Total Service Length needed if placed side-by-side approx 12-14m linear x 3-4m depth.
+            // Let's approximate Service Area as a fixed sq meterage for calculations.
+            const serviceAreaTotal = 48; // approx 4 rooms of 12m2 avg
+
+            // --- DOM ELEMENTS ---
+            const stallSlider = document.getElementById('stallSizeSlider');
+            const walkwaySlider = document.getElementById('walkwaySlider');
+            const stallValDisplay = document.getElementById('stallSizeVal');
+            const stallValDisplay2 = document.getElementById('stallSizeVal2');
+            const walkwayValDisplay = document.getElementById('walkwayVal');
+            const totalStallsDisplay = document.getElementById('totalStalls');
+            const blueprintContainer = document.getElementById('blueprintContainer');
+
+            // --- CHART INITIALIZATION ---
+            const ctx = document.getElementById('lote1Chart').getContext('2d');
+            
+            Chart.defaults.font.family = "'Inter', sans-serif";
+            
+            const distributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Área Pesebreras', 'Área Servicios (4 Cuartos)', 'Circulación/Pasillos', 'Holgura'],
+                    datasets: [{
+                        data: [300, 48, 100, 7], // Initial dummy data
+                        backgroundColor: [
+                            '#8b9e83', // Pesebreras (Green)
+                            '#d48c70', // Servicios (Terracotta)
+                            '#e5e7eb', // Pasillo (Grey)
+                            '#f3f4f6'  // Holgura
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { usePointStyle: true, padding: 20 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) { label += ': '; }
+                                    if (context.parsed !== null) {
+                                        label += Math.round(context.parsed) + ' m²';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+
+            // --- CALCULATION LOGIC ---
+            function calculateLayout() {
+                const stallSize = parseFloat(stallSlider.value);
+                const walkwayWidth = parseFloat(walkwaySlider.value);
+                
+                // Update text displays
+                stallValDisplay.textContent = stallSize.toFixed(1);
+                stallValDisplay2.textContent = stallSize.toFixed(1);
+                walkwayValDisplay.textContent = walkwayWidth.toFixed(1);
+
+                // Logic:
+                // Width is 13m. 
+                // Layout Type: Central Walkway (most efficient for this width).
+                // Width breakdown: Stall (X) + Walkway (Y) + Stall (X).
+                // 13m is plenty. Even with 4m stalls: 4 + 3 + 4 = 11m. Leaves 2m for walls/structure.
+                // So width is not the limiting factor for count, Length is.
+                
+                // Length is 35m.
+                // Subtract service area length. Assuming service rooms are at one end or split.
+                // Let's assume service rooms take up a block of approx 8m of length (across the full or partial width).
+                // Or simply: Area based calculation for estimation.
+                
+                // More precise Linear Calculation:
+                // Assume 4 service rooms need approx 4m x 3m each.
+                // If placed 2 on each side at entrance: Takes 6m - 8m of length.
+                // Let's reserve 8 meters of length for the 4 rooms + entrance area.
+                const serviceLinearLength = 8; 
+                const availableLengthForStalls = lot1.length - serviceLinearLength; // 35 - 8 = 27m
+
+                // Number of stalls per side = Available Length / Stall Width
+                const stallsPerSide = Math.floor(availableLengthForStalls / stallSize);
+                const totalStalls = stallsPerSide * 2;
+
+                // Update Display
+                totalStallsDisplay.textContent = totalStalls;
+
+                // Update Chart Data
+                // Area Stalls = Total Stalls * (Stall Size * Stall Size)
+                const areaStalls = totalStalls * (stallSize * stallSize);
+                const areaWalkway = (lot1.length) * walkwayWidth; // Walkway runs full length
+                const areaService = serviceAreaTotal;
+                const areaUsed = areaStalls + areaWalkway + areaService;
+                const areaFree = Math.max(0, lot1.totalArea - areaUsed);
+
+                distributionChart.data.datasets[0].data = [areaStalls, areaService, areaWalkway, areaFree];
+                distributionChart.update();
+
+                // Update Blueprint
+                renderBlueprint(stallsPerSide, stallSize);
+            }
+
+            // --- BLUEPRINT RENDERING ---
+            function renderBlueprint(stallsPerSide, stallSize) {
+                blueprintContainer.innerHTML = '';
+                
+                // Create a container that mimics the 35x13 ratio
+                // 35m / 13m = 2.69 ratio
+                // Let's make the visualization container relative.
+                
+                // We will build a CSS Grid representation
+                // Row 1: Stalls Side A
+                // Row 2: Walkway
+                // Row 3: Stalls Side B
+                // Plus Service Area block at the "start" (left)
+                
+                const gridContainer = document.createElement('div');
+                gridContainer.className = 'flex w-full h-full border-4 border-gray-400 p-1 bg-white relative';
+                
+                // 1. Service Block (The "8m" reserved)
+                // Width % = 8m / 35m = ~22%
+                const serviceBlock = document.createElement('div');
+                serviceBlock.className = 'h-full bg-[#d48c70] text-white flex flex-col justify-center items-center text-[10px] font-bold border-r-2 border-white z-10';
+                serviceBlock.style.width = '22%';
+                serviceBlock.innerHTML = '<div>SERVICIOS</div><div class="font-normal text-[8px] opacity-75">(Bodega, Aperos, etc)</div>';
+                gridContainer.appendChild(serviceBlock);
+
+                // 2. Stable Area
+                const stableArea = document.createElement('div');
+                stableArea.className = 'h-full flex flex-col flex-1'; // Takes remaining width
+                
+                // Top Row of Stalls
+                const topRow = document.createElement('div');
+                topRow.className = 'flex-1 flex border-b border-dashed border-gray-300';
+                for(let i=0; i<stallsPerSide; i++) {
+                    const stall = document.createElement('div');
+                    stall.className = 'flex-1 bg-[#8b9e83] border-r border-white flex items-center justify-center text-white text-[10px] m-[1px] rounded-sm';
+                    stall.textContent = i+1;
+                    topRow.appendChild(stall);
+                }
+                stableArea.appendChild(topRow);
+
+                // Walkway
+                const walkRow = document.createElement('div');
+                walkRow.className = 'h-1/4 bg-[#f3f4f6] flex items-center justify-center text-xs text-gray-400 tracking-widest';
+                walkRow.textContent = 'PASILLO';
+                stableArea.appendChild(walkRow);
+
+                // Bottom Row of Stalls
+                const botRow = document.createElement('div');
+                botRow.className = 'flex-1 flex border-t border-dashed border-gray-300';
+                for(let i=0; i<stallsPerSide; i++) {
+                    const stall = document.createElement('div');
+                    stall.className = 'flex-1 bg-[#8b9e83] border-r border-white flex items-center justify-center text-white text-[10px] m-[1px] rounded-sm';
+                    stall.textContent = i+1;
+                    botRow.appendChild(stall);
+                }
+                stableArea.appendChild(botRow);
+
+                gridContainer.appendChild(stableArea);
+                blueprintContainer.appendChild(gridContainer);
+            }
+
+            // --- EVENT LISTENERS ---
+            stallSlider.addEventListener('input', calculateLayout);
+            walkwaySlider.addEventListener('input', calculateLayout);
+
+            // Initial Run
+            calculateLayout();
+        });
+    </script>
+</body>
+</html>
