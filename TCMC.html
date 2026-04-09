@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV ChargeConnect - Análisis de Arquitectura y Stack</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 60vh;
+            max-height: 450px;
+            min-height: 300px;
+        }
+
+        .nav-item.active {
+            background-color: #0f172a;
+            border-left-width: 4px;
+            border-left-color: #10b981;
+            color: #10b981;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <!-- Chosen Palette: Eco-Tech Slate (Slate-800, Slate-900, Emerald-500, Gray-50, White) -->
+    <!-- Application Structure Plan: Diseño de dashboard de una sola página (SPA) con navegación lateral. Permite a los tomadores de decisiones explorar secuencialmente o saltar directamente a módulos específicos (Frontend, Backend, Infraestructura). Incluye un "Recomendador de Stack" interactivo que adapta la arquitectura sugerida basándose en las prioridades del negocio (Velocidad vs Escalabilidad), facilitando la comprensión de trade-offs técnicos. -->
+    <!-- Visualization & Content Choices: 
+         1. Gráfico de Radar (Chart.js): Compara React Native vs Flutter en métricas clave. Justificación: Permite visualizar multidimensionalmente las fortalezas de cada framework para una app multiplataforma.
+         2. Gráfico de Dona (Chart.js): Muestra la distribución estimada del esfuerzo/costo operativo. Justificación: Comunica rápidamente dónde estarán los mayores desafíos de infraestructura.
+         3. Diagramas basados en Flexbox/Grid: Para mostrar la arquitectura del sistema sin usar SVG o Mermaid, garantizando un renderizado nativo y responsivo.
+         4. Recomendador Interactivo: Formularios y actualización dinámica del DOM para simular una consultoría de arquitectura en tiempo real. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="flex h-screen overflow-hidden antialiased">
+
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-20 flex-shrink-0 transition-all duration-300">
+        <div class="p-6 border-b border-slate-800">
+            <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                <span class="text-emerald-500">⚡</span> EV Stack
+            </h1>
+            <p class="text-xs mt-2 text-slate-400">Análisis de Arquitectura</p>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1">
+                <li>
+                    <button data-target="view-overview" class="nav-item active w-full text-left px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors flex items-center gap-3">
+                        <span>📊</span> Resumen Ejecutivo
+                    </button>
+                </li>
+                <li>
+                    <button data-target="view-frontend" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors flex items-center gap-3">
+                        <span>📱</span> App y Frontend
+                    </button>
+                </li>
+                <li>
+                    <button data-target="view-backend" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors flex items-center gap-3">
+                        <span>⚙️</span> Backend & Datos
+                    </button>
+                </li>
+                <li>
+                    <button data-target="view-infra" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors flex items-center gap-3">
+                        <span>☁️</span> Infraestructura
+                    </button>
+                </li>
+                <li class="mt-8 border-t border-slate-800 pt-4">
+                    <button data-target="view-recommender" class="nav-item w-full text-left px-6 py-3 hover:bg-slate-800 hover:text-white transition-colors flex items-center gap-3 text-emerald-400 font-semibold">
+                        <span>🎯</span> Simulador de Stack
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto bg-slate-50 relative">
+        <header class="bg-white shadow-sm sticky top-0 z-10 px-8 py-4 flex justify-between items-center">
+            <h2 id="header-title" class="text-xl font-semibold text-slate-800">Resumen Ejecutivo</h2>
+            <div class="text-sm px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full font-medium">
+                Proyecto: Plataforma EV Multicanal
+            </div>
+        </header>
+
+        <div class="p-8 max-w-7xl mx-auto">
+            
+            <section id="view-overview" class="view-section block fade-in">
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Arquitectura para Redes de Carga EV</h3>
+                    <p class="text-lg text-slate-600 leading-relaxed">
+                        Este informe detalla la investigación tecnológica para construir una plataforma integral dirigida a usuarios de vehículos eléctricos (especialmente Tesla y estándar CCS). La solución requiere presencia en <strong>iOS, Android y Web</strong>, ofreciendo funcionalidades críticas en tiempo real: mapas de puntos de carga, enrutamiento inteligente, especificaciones técnicas y características de comunidad.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    <div class="glass-panel p-6 rounded-xl shadow-sm border-t-4 border-emerald-500">
+                        <div class="text-3xl mb-2">🗺️</div>
+                        <h4 class="font-bold text-slate-800 mb-1">Mapeo y Rutas</h4>
+                        <p class="text-sm text-slate-600">Geolocalización, cálculo de alcance por batería y paradas óptimas.</p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-xl shadow-sm border-t-4 border-blue-500">
+                        <div class="text-3xl mb-2">🔌</div>
+                        <h4 class="font-bold text-slate-800 mb-1">Datos de Cargadores</h4>
+                        <p class="text-sm text-slate-600">Integración con protocolos OCPI para disponibilidad en tiempo real y telemetría.</p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-xl shadow-sm border-t-4 border-purple-500">
+                        <div class="text-3xl mb-2">👥</div>
+                        <h4 class="font-bold text-slate-800 mb-1">Comunidad</h4>
+                        <p class="text-sm text-slate-600">Reseñas, check-ins, foros y web sockets para chat en vivo entre conductores.</p>
+                    </div>
+                    <div class="glass-panel p-6 rounded-xl shadow-sm border-t-4 border-orange-500">
+                        <div class="text-3xl mb-2">💻</div>
+                        <h4 class="font-bold text-slate-800 mb-1">Multiplataforma</h4>
+                        <p class="text-sm text-slate-600">Experiencia unificada en dispositivos móviles y navegadores web de escritorio.</p>
+                    </div>
+                </div>
+
+                <div class="glass-panel rounded-xl shadow-sm p-8 mb-8">
+                    <h3 class="text-xl font-bold text-slate-800 mb-6">Distribución Estimada de Complejidad Operativa</h3>
+                    <p class="text-sm text-slate-600 mb-6">Analizando las características solicitadas, la mayor carga cognitiva y de procesamiento recaerá en el manejo de datos geoespaciales y algoritmos de rutas, seguido por la sincronización en tiempo real de la comunidad y estados de cargadores.</p>
+                    <div class="chart-container">
+                        <canvas id="complexityChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-frontend" class="view-section hidden fade-in">
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Estrategia de Aplicación Cliente (Frontend)</h3>
+                    <p class="text-lg text-slate-600 leading-relaxed">
+                        Para abarcar iOS, Android y Web eficientemente sin triplicar el equipo de desarrollo, se requiere un framework multiplataforma. La elección se reduce a los líderes del mercado: <strong>React Native</strong> y <strong>Flutter</strong>.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="glass-panel p-6 rounded-xl shadow-sm">
+                        <h4 class="text-lg font-bold text-slate-800 mb-4">Comparativa de Frameworks</h4>
+                        <div class="chart-container" style="height: 400px;">
+                            <canvas id="frameworkChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-4">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <div class="flex items-center gap-3 mb-3">
+                                <span class="text-2xl text-blue-500">⚛️</span>
+                                <h4 class="font-bold text-slate-800">React Native (Recomendado para Web pesada)</h4>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-3">Utiliza JavaScript/TypeScript. Excelente ecosistema. Con <strong>Expo</strong> y React Native Web, la base de código compartida entre web y móvil puede superar el 80%.</p>
+                            <ul class="text-sm text-slate-700 list-disc list-inside">
+                                <li>Integración profunda con mapas nativos.</li>
+                                <li>Gran ecosistema de librerías de comunidad.</li>
+                                <li>Actualizaciones Over-The-Air (OTA) fáciles.</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <div class="flex items-center gap-3 mb-3">
+                                <span class="text-2xl text-cyan-500">🦋</span>
+                                <h4 class="font-bold text-slate-800">Flutter (Recomendado para UI/UX estricta)</h4>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-3">Utiliza Dart. Renderiza su propio motor gráfico (Canvas), lo que garantiza que la app se vea exactamente igual en todas las plataformas.</p>
+                            <ul class="text-sm text-slate-700 list-disc list-inside">
+                                <li>Rendimiento cercano al nativo (60/120fps consistentes).</li>
+                                <li>Widgets altamente personalizables.</li>
+                                <li>Soporte web mejorando, pero aún pesado para SEO inicial.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-emerald-50 p-6 rounded-xl border border-emerald-200 mt-auto">
+                            <h5 class="font-bold text-emerald-800 flex items-center gap-2"><span class="text-xl">💡</span> Veredicto de UI</h5>
+                            <p class="text-sm text-emerald-700 mt-2">Para una app centrada en mapas, <strong>React Native</strong> suele tener una ligera ventaja al usar los módulos nativos de Mapbox o Google Maps de manera más fluida que las vistas incrustadas de Flutter, especialmente en interacciones complejas de paneo/zoom con múltiples pines de cargadores.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-backend" class="view-section hidden fade-in">
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Backend, Bases de Datos y Algoritmos</h3>
+                    <p class="text-lg text-slate-600 leading-relaxed">
+                        El núcleo de esta aplicación no es solo almacenar datos, sino procesar consultas espaciales masivas (encontrar puntos de carga en un radio, calcular rutas a través de polígonos) y manejar alta concurrencia para la comunidad.
+                    </p>
+                </div>
+
+                <div class="glass-panel p-8 rounded-xl shadow-sm mb-8">
+                    <h4 class="text-xl font-bold text-slate-800 mb-6">Arquitectura Lógica de Servicios</h4>
+                    
+                    <div class="flex flex-col md:flex-row items-center justify-center gap-4 bg-slate-100 p-6 rounded-lg border border-slate-200 overflow-hidden">
+                        
+                        <div class="bg-white p-4 rounded shadow text-center w-full md:w-48 border-t-4 border-slate-800">
+                            <div class="text-2xl mb-1">📱💻</div>
+                            <div class="font-bold text-sm">Clientes</div>
+                            <div class="text-xs text-slate-500">iOS, Android, Web</div>
+                        </div>
+
+                        <div class="text-slate-400 text-2xl hidden md:block">➔</div>
+                        <div class="text-slate-400 text-2xl md:hidden">⬇</div>
+
+                        <div class="bg-white p-4 rounded shadow text-center w-full md:w-48 border-t-4 border-blue-500 relative">
+                            <div class="text-2xl mb-1">🚪</div>
+                            <div class="font-bold text-sm">API Gateway</div>
+                            <div class="text-xs text-slate-500">Auth & Rate Limiting</div>
+                        </div>
+
+                        <div class="text-slate-400 text-2xl hidden md:block">➔</div>
+                        <div class="text-slate-400 text-2xl md:hidden">⬇</div>
+
+                        <div class="flex flex-col gap-3 w-full md:w-56">
+                            <div class="bg-white p-3 rounded shadow text-center border-l-4 border-emerald-500 flex justify-between items-center">
+                                <span class="text-xs font-bold">Servicio de Rutas</span>
+                                <span>🗺️</span>
+                            </div>
+                            <div class="bg-white p-3 rounded shadow text-center border-l-4 border-orange-500 flex justify-between items-center">
+                                <span class="text-xs font-bold">Servicio de Cargadores</span>
+                                <span>🔌</span>
+                            </div>
+                            <div class="bg-white p-3 rounded shadow text-center border-l-4 border-purple-500 flex justify-between items-center">
+                                <span class="text-xs font-bold">Comunidad (WebSockets)</span>
+                                <span>💬</span>
+                            </div>
+                        </div>
+
+                        <div class="text-slate-400 text-2xl hidden md:block">➔</div>
+                        <div class="text-slate-400 text-2xl md:hidden">⬇</div>
+
+                        <div class="flex flex-col gap-3 w-full md:w-48">
+                            <div class="bg-slate-800 text-white p-3 rounded shadow text-center">
+                                <div class="text-lg">🗄️ PostgreSQL</div>
+                                <div class="text-xs text-emerald-400 font-bold">+ PostGIS (Clave)</div>
+                            </div>
+                            <div class="bg-red-50 text-red-800 p-3 rounded shadow text-center border border-red-200">
+                                <div class="text-lg">⚡ Redis</div>
+                                <div class="text-xs">Caché y Mensajería</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h4 class="font-bold text-slate-800 mb-2 border-b pb-2">Elección de Base de Datos</h4>
+                        <p class="text-sm text-slate-600 mb-4">Para calcular rutas y buscar estaciones "cerca de la ruta", las bases de datos NoSQL como MongoDB se quedan cortas. La solución estándar en la industria es <strong>PostgreSQL con la extensión PostGIS</strong>.</p>
+                        <div class="bg-slate-50 p-3 rounded text-xs font-mono text-slate-700 overflow-x-auto border border-slate-200">
+                            SELECT nombre, ubicacion <br>
+                            FROM estaciones_carga <br>
+                            WHERE ST_DWithin(ubicacion, ST_MakePoint(lon, lat), radio);
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h4 class="font-bold text-slate-800 mb-2 border-b pb-2">Motor Backend</h4>
+                        <p class="text-sm text-slate-600 mb-4">Se recomiendan lenguajes tipados orientados a concurrencia:</p>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 mt-1">✓</span>
+                                <div>
+                                    <strong class="text-sm text-slate-800">Node.js (NestJS / TypeScript):</strong> Excelente para I/O intensivo, WebSockets para la comunidad, y comparte lenguaje con el Frontend.
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-emerald-500 mt-1">✓</span>
+                                <div>
+                                    <strong class="text-sm text-slate-800">Go (Golang):</strong> Máximo rendimiento para el microservicio que procese las rutas y cálculos matemáticos del alcance de batería.
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-infra" class="view-section hidden fade-in">
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Infraestructura y APIs Externas</h3>
+                    <p class="text-lg text-slate-600 leading-relaxed">
+                        Desplegar la aplicación requiere servicios en la nube robustos y proveedores de mapas de alta calidad, ya que la experiencia visual de navegación es el producto principal.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="col-span-1 lg:col-span-2 glass-panel p-6 rounded-xl shadow-sm">
+                        <h4 class="font-bold text-slate-800 mb-4 text-lg">Proveedores de Mapas (Core Business)</h4>
+                        <div class="space-y-4">
+                            <div class="p-4 border border-blue-200 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition relative">
+                                <div class="absolute top-2 right-2 text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded font-bold">Opción Premium</div>
+                                <h5 class="font-bold text-blue-900 text-lg">Google Maps Platform</h5>
+                                <p class="text-sm text-blue-800 mt-1">Rutas predictivas, tráfico en tiempo real inigualable. Extremadamente costoso a gran escala. Integración directa de Places API para negocios cercanos a cargadores.</p>
+                            </div>
+                            <div class="p-4 border border-emerald-200 bg-emerald-50 rounded-lg cursor-pointer hover:bg-emerald-100 transition relative">
+                                <div class="absolute top-2 right-2 text-xs bg-emerald-500 text-white px-2 py-1 rounded font-bold">Recomendado</div>
+                                <h5 class="font-bold text-emerald-900 text-lg">Mapbox</h5>
+                                <p class="text-sm text-emerald-800 mt-1">Altamente personalizable (puedes crear un mapa oscuro estilo Tesla UI muy fácilmente). Más económico para rendering de mapas nativos. Ampliamente usado por marcas automotrices.</p>
+                            </div>
+                            <div class="p-4 border border-slate-200 bg-white rounded-lg">
+                                <h5 class="font-bold text-slate-800 text-lg">OpenStreetMap (OSRM)</h5>
+                                <p class="text-sm text-slate-600 mt-1">Gratuito, open source. Requiere levantar tu propio servidor de rutas. Ideal para ahorrar costos en la fase MVP si se tiene experiencia en devops.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-span-1 flex flex-col gap-6">
+                        <div class="glass-panel p-6 rounded-xl shadow-sm bg-slate-800 text-white h-full">
+                            <h4 class="font-bold text-emerald-400 mb-4 text-lg">Proveedor Cloud</h4>
+                            <p class="text-sm text-slate-300 mb-4">Para gestionar la variabilidad de tráfico (altos picos en horas pico de carga), se recomienda una arquitectura Serverless o Containerizada.</p>
+                            
+                            <div class="mt-4 space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>AWS (ECS / Fargate)</span>
+                                        <span class="text-emerald-400 font-bold">90% Fit</span>
+                                    </div>
+                                    <div class="w-full bg-slate-700 rounded-full h-2">
+                                        <div class="bg-emerald-400 h-2 rounded-full" style="width: 90%"></div>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mt-1">RDS para PostGIS, ElastiCache para Redis. Ecosistema robusto y maduro.</p>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span>GCP (Cloud Run)</span>
+                                        <span class="text-blue-400 font-bold">85% Fit</span>
+                                    </div>
+                                    <div class="w-full bg-slate-700 rounded-full h-2">
+                                        <div class="bg-blue-400 h-2 rounded-full" style="width: 85%"></div>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mt-1">Excelente integración si se usan servicios de Google Maps. Cloud SQL soporta PostGIS.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="view-recommender" class="view-section hidden fade-in">
+                <div class="mb-8 text-center max-w-3xl mx-auto">
+                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Simulador de Stack Tecnológico</h3>
+                    <p class="text-lg text-slate-600">
+                        Selecciona la prioridad principal de tu modelo de negocio actual para generar la arquitectura y el stack tecnológico recomendado para tu app de usuarios EV.
+                    </p>
+                </div>
+
+                <div class="bg-white p-8 rounded-2xl shadow-lg max-w-4xl mx-auto border border-slate-100">
+                    <div class="mb-6">
+                        <label for="priority-select" class="block text-sm font-semibold text-slate-700 mb-2">Mi prioridad principal en esta fase es:</label>
+                        <select id="priority-select" class="w-full p-4 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition text-slate-800 text-lg cursor-pointer">
+                            <option value="none">-- Selecciona un escenario --</option>
+                            <option value="mvp">🚀 Velocidad de Salida (MVP rápido para inversores)</option>
+                            <option value="scale">🌍 Escalabilidad Masiva (Manejar miles de usuarios concurrentes)</option>
+                            <option value="perf">⚙️ Rendimiento Extremo (Simulación en tiempo real y UI perfecta)</option>
+                        </select>
+                    </div>
+
+                    <div id="recommender-result" class="hidden mt-8 border-t border-slate-100 pt-8 transition-all">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div id="rec-icon" class="text-4xl">🏆</div>
+                            <h4 id="rec-title" class="text-2xl font-bold text-slate-800">Stack Recomendado</h4>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <div class="text-xs uppercase tracking-wider text-slate-500 font-bold mb-1">Frontend (App/Web)</div>
+                                <div id="rec-front" class="text-lg font-semibold text-slate-800"></div>
+                                <p id="rec-front-desc" class="text-sm text-slate-600 mt-2"></p>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <div class="text-xs uppercase tracking-wider text-slate-500 font-bold mb-1">Backend & API</div>
+                                <div id="rec-back" class="text-lg font-semibold text-slate-800"></div>
+                                <p id="rec-back-desc" class="text-sm text-slate-600 mt-2"></p>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <div class="text-xs uppercase tracking-wider text-slate-500 font-bold mb-1">Base de Datos</div>
+                                <div id="rec-db" class="text-lg font-semibold text-slate-800"></div>
+                                <p id="rec-db-desc" class="text-sm text-slate-600 mt-2"></p>
+                            </div>
+                            <div class="bg-slate-50 p-5 rounded-lg border border-slate-200">
+                                <div class="text-xs uppercase tracking-wider text-slate-500 font-bold mb-1">Infraestructura & Mapas</div>
+                                <div id="rec-infra" class="text-lg font-semibold text-slate-800"></div>
+                                <p id="rec-infra-desc" class="text-sm text-slate-600 mt-2"></p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-emerald-50 p-4 rounded-lg border border-emerald-200 text-emerald-800 text-sm">
+                            <strong>Justificación:</strong> <span id="rec-reasoning"></span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        const state = {
+            currentView: 'view-overview',
+            chartsInitialized: {
+                complexity: false,
+                framework: false
+            }
+        };
+
+        const chartInstances = {};
+
+        const dataStore = {
+            scenarios: {
+                mvp: {
+                    icon: "🚀",
+                    title: "Stack 'Lean Startup' (Time-to-Market)",
+                    front: "React Native (Expo) + React Web",
+                    frontDesc: "Permite usar el mismo equipo de JavaScript para web, iOS y Android con mínimo esfuerzo de configuración inicial.",
+                    back: "Node.js (Express) + Firebase/Supabase",
+                    backDesc: "Supabase provee Auth y APIs instantáneas sobre Postgres. Firebase es ideal para chat/comunidad en tiempo real sin codificar backend pesado.",
+                    db: "PostgreSQL gestionado (Supabase/Neon)",
+                    dbDesc: "Evita administrar servidores. Tienes acceso a PostGIS inmediatamente para las rutas básicas.",
+                    infra: "Mapbox + Vercel/Render",
+                    infraDesc: "Mapbox ofrece tiers gratuitos generosos para empezar. Despliegues automatizados sin equipo DevOps.",
+                    reason: "Este stack prioriza la velocidad. Al externalizar la autenticación, base de datos en tiempo real y despliegues, el equipo se enfoca 100% en la experiencia de usuario de la app."
+                },
+                scale: {
+                    icon: "🌍",
+                    title: "Stack 'Enterprise Scale' (Microservicios)",
+                    front: "React Native (CLI) o Flutter",
+                    frontDesc: "Desarrollo multiplataforma pero con control total sobre los módulos nativos para optimizar el rendimiento del mapa interactivo.",
+                    back: "Go (Rutas) + Node.js (Comunidad/API)",
+                    backDesc: "Arquitectura de microservicios. Go maneja el pesado procesamiento de algoritmos espaciales; Node.js maneja la concurrencia de miles de usuarios chateando/reportando.",
+                    db: "PostgreSQL (PostGIS) principal + Redis",
+                    dbDesc: "PostGIS para almacenamiento persistente y espacial. Redis para cachear disponibilidad de cargadores en tiempo real (milisegundos).",
+                    infra: "AWS EKS (Kubernetes) + Mapbox",
+                    infraDesc: "Auto-escalado elástico basado en demanda. Control granular de costos y seguridad a nivel corporativo.",
+                    reason: "Preparado para millones de peticiones. Separar el procesamiento matemático (Go) del I/O de red (Node) garantiza que la app no colapse cuando miles de coches soliciten rutas simultáneamente en horas pico."
+                },
+                perf: {
+                    icon: "⚙️",
+                    title: "Stack 'Native First' (Rendimiento Absoluto)",
+                    front: "Swift (iOS), Kotlin (Android), React (Web)",
+                    frontDesc: "Desarrollo 100% nativo. Tres bases de código separadas. Garantiza la mejor experiencia posible, animaciones perfectas y uso óptimo de batería del dispositivo.",
+                    back: "Rust o Go",
+                    backDesc: "Lenguajes compilados de altísimo rendimiento para minimizar la latencia al nivel de microsegundos en el cálculo de polígonos de alcance.",
+                    db: "PostgreSQL + Bases de Datos Especializadas en Grafos",
+                    dbDesc: "Uso de bases de datos de grafos (ej. Neo4j) específicamente estructuradas para cálculos de rutas multipunto complejas.",
+                    infra: "AWS / Bare Metal + Custom OSRM",
+                    infraDesc: "Implementar servidores de ruteo propios (OSRM/Valhalla) en lugar de depender de APIs de terceros para tener latencia cero.",
+                    reason: "Este enfoque no escatima en costos de desarrollo inicial, buscando entregar la herramienta más fluida y rápida del mercado, compitiendo directamente con el software nativo de los propios vehículos."
+                }
+            }
+        };
+
+        const initCharts = () => {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 } } },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                        titleFont: { family: 'Inter', size: 14 },
+                        bodyFont: { family: 'Inter', size: 13 },
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: true
+                    }
+                }
+            };
+
+            if (state.currentView === 'view-overview' && !state.chartsInitialized.complexity) {
+                const ctxComplexity = document.getElementById('complexityChart').getContext('2d');
+                chartInstances.complexity = new Chart(ctxComplexity, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Algoritmos de Rutas & Mapas', 'Sincronización Tiempo Real (OCPI/Sockets)', 'Desarrollo Interfaz (UI/UX)', 'Gestión de Comunidad/Usuarios', 'Infra y Seguridad'],
+                        datasets: [{
+                            data: [35, 25, 20, 10, 10],
+                            backgroundColor: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#64748b'],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        ...chartOptions,
+                        cutout: '65%',
+                        plugins: {
+                            ...chartOptions.plugins,
+                            title: { display: false }
+                        }
+                    }
+                });
+                state.chartsInitialized.complexity = true;
+            }
+
+            if (state.currentView === 'view-frontend' && !state.chartsInitialized.framework) {
+                const ctxFramework = document.getElementById('frameworkChart').getContext('2d');
+                chartInstances.framework = new Chart(ctxFramework, {
+                    type: 'radar',
+                    data: {
+                        labels: [
+                            ['Integración', 'Mapas Nativos'], 
+                            'Rendimiento UI', 
+                            ['Soporte', 'Web/Desktop'], 
+                            'Velocidad de MVP', 
+                            ['Ecosistema', 'Terceros']
+                        ],
+                        datasets: [
+                            {
+                                label: 'React Native',
+                                data: [9, 7, 9, 9, 10],
+                                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                                borderColor: 'rgba(59, 130, 246, 1)',
+                                pointBackgroundColor: 'rgba(59, 130, 246, 1)',
+                                borderWidth: 2
+                            },
+                            {
+                                label: 'Flutter',
+                                data: [7, 9, 6, 8, 8],
+                                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                                borderColor: 'rgba(16, 185, 129, 1)',
+                                pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                                borderWidth: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        ...chartOptions,
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(226, 232, 240, 1)' },
+                                grid: { color: 'rgba(226, 232, 240, 1)' },
+                                pointLabels: { font: { family: 'Inter', size: 11, weight: '600' }, color: '#475569' },
+                                ticks: { display: false, min: 0, max: 10 }
+                            }
+                        }
+                    }
+                });
+                state.chartsInitialized.framework = true;
+            }
+        };
+
+        const setupNavigation = () => {
+            const buttons = document.querySelectorAll('.nav-item');
+            const views = document.querySelectorAll('.view-section');
+            const headerTitle = document.getElementById('header-title');
+
+            buttons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.getAttribute('data-target');
+                    
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    views.forEach(view => {
+                        view.classList.add('hidden');
+                        view.classList.remove('block');
+                    });
+                    
+                    const targetView = document.getElementById(targetId);
+                    targetView.classList.remove('hidden');
+                    targetView.classList.add('block');
+                    
+                    headerTitle.textContent = button.textContent.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim();
+
+                    state.currentView = targetId;
+                    initCharts();
+                });
+            });
+        };
+
+        const setupRecommender = () => {
+            const select = document.getElementById('priority-select');
+            const resultDiv = document.getElementById('recommender-result');
+            
+            select.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if (val === 'none') {
+                    resultDiv.classList.add('hidden');
+                    return;
+                }
+                
+                const data = dataStore.scenarios[val];
+                if (data) {
+                    document.getElementById('rec-icon').textContent = data.icon;
+                    document.getElementById('rec-title').textContent = data.title;
+                    document.getElementById('rec-front').textContent = data.front;
+                    document.getElementById('rec-front-desc').textContent = data.frontDesc;
+                    document.getElementById('rec-back').textContent = data.back;
+                    document.getElementById('rec-back-desc').textContent = data.backDesc;
+                    document.getElementById('rec-db').textContent = data.db;
+                    document.getElementById('rec-db-desc').textContent = data.dbDesc;
+                    document.getElementById('rec-infra').textContent = data.infra;
+                    document.getElementById('rec-infra-desc').textContent = data.infraDesc;
+                    document.getElementById('rec-reasoning').textContent = data.reason;
+                    
+                    resultDiv.classList.remove('hidden');
+                    
+                    resultDiv.classList.remove('fade-in');
+                    void resultDiv.offsetWidth; 
+                    resultDiv.classList.add('fade-in');
+                }
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupNavigation();
+            setupRecommender();
+            initCharts();
+        });
+
+    </script>
+</body>
+</html>
